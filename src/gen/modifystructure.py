@@ -40,16 +40,17 @@ def modify_pairs(atoms,atom_pairs):
         write(output_filename, modified_atoms, format="vasp")
         print(f"Modified POSCAR saved in directory {directory_name} as {output_filename}.")
 
-def modify():
+def modify(base_dir):
     '''Modifies structures based of user input. '''
-    pkgdir = sys.modules['amelia_wf'].__path__[0]
-    fullpath = os.path.join(pkgdir, 'POSCAR')
-    shutil.copy(fullpath, os.getcwd())
+    #pkgdir = sys.modules['lco_workflow'].__path__[0]
+    #fullpath = os.path.join(pkgdir, 'POSCAR')
+    #shutil.copy(fullpath, base_dir)
     # Read POSCAR 
-    atoms = read(os.path.join(os.getcwd(),'POSCAR'))
+    atoms = read(os.path.join(base_dir,'POSCAR'))
+    print('atoms read')
 
     # Define number of each element in POSCAR
-    with open(os.path.join(os.getcwd(),'POSCAR'), 'r') as P:
+    with open(os.path.join(base_dir,'POSCAR'), 'r') as P:
         P_lines = P.readlines()
     
     e_line = P_lines[5]
@@ -67,7 +68,7 @@ def modify():
     # Loop through each element and its count
     for element, count in element_counts.items():
         # Pair consecutive atoms of this element
-        for i in range(count // 2):
+        for i in range(int(count) // 2):
             # Append the pair to the appropriate list based on the element type
             pair = (index, index + 1)
             if f'{element}_pairs' in pairs:
@@ -85,4 +86,10 @@ def modify():
         print(f'{i+1}:{element}')
     choice = input("Enter the number of your choice: ")
     
-    
+    for i,element in enumerate(elements,1):
+        if float(choice) == i and f'{element}_pairs' in pairs:
+            modify_pairs(atoms, pairs[f'{element}_pairs'])
+            
+if __name__ == "__main__":
+    base_dir = os.getcwd()
+    modify(base_dir)
