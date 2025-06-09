@@ -1,0 +1,25 @@
+[project]
+name = "lco-workflow"
+version = "0.2.6"
+description = "A CLI tool for the LCO Modifications Workflow"
+authors = [
+    {name = "Dorothea Fennell",email = "dfennell1@bnl.gov"}
+]
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "typer (>=0.15.4,<0.16.0)",
+    "ase (>=3.25.0,<4.0.0)",
+    "pymatgen (>=2025.5.2,<2026.0.0)",
+    "plotly (>=6.1.1,<7.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "lco_workflow", from = "src"}]
+
+[tool.poetry.scripts]
+wf = "lco_workflow.main:app"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
