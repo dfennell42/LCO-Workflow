@@ -5,7 +5,8 @@
 A command line interface (CLI) tool for the LCO Modifications Workflow built by Jennifer Bjorklund and Dorothea Fennell.
 
 #### Commands:
-**Commands must be preceded by wf.**
+***Commands must be preceded by wf.***
+
 *modify*: Modifies pristine POSCAR, creates Modification_# directories, and sets up pristine surface calculations. Equivalent to bash script **run-all-LCOmod-workflow1-5.sh**. 
 ***NOTE:*** You must create the ModsCo.txt file yourself. 
 
