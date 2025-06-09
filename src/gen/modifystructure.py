@@ -42,9 +42,9 @@ def modify_pairs(atoms,atom_pairs):
 
 def modify(base_dir):
     '''Modifies structures based of user input. '''
-    #pkgdir = sys.modules['lco_workflow'].__path__[0]
-    #fullpath = os.path.join(pkgdir, 'POSCAR')
-    #shutil.copy(fullpath, base_dir)
+    pkgdir = sys.modules['lco_workflow'].__path__[0]
+    fullpath = os.path.join(pkgdir, 'POSCAR')
+    shutil.copy(fullpath, base_dir)
     # Read POSCAR 
     atoms = read(os.path.join(base_dir,'POSCAR'))
     print('atoms read')
@@ -90,6 +90,6 @@ def modify(base_dir):
         if float(choice) == i and f'{element}_pairs' in pairs:
             modify_pairs(atoms, pairs[f'{element}_pairs'])
             
-if __name__ == "__main__":
-    base_dir = os.getcwd()
-    modify(base_dir)
+#if __name__ == "__main__":
+   # base_dir = os.getcwd()
+   # modify(base_dir)
