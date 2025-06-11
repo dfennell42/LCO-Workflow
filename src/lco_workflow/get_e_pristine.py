@@ -29,6 +29,11 @@ def get_e(e_dir):
 
 def get_all_e(base_dir):
     '''Gets total energy of pristine surfaces.Returns file of pristine energies.'''
+    #Checks for existing E_pristine.csv 
+    if 'E_pristine.csv' in os.listdir(base_dir):
+        print('E_pristine.csv already exists. Exiting...')
+        sys.exit()
+    
     mod_dirs = []
     for root, dirs, files in os.walk(base_dir):
         if os.path.basename(root).startswith('Modification_'):
