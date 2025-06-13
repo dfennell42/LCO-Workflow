@@ -32,7 +32,7 @@ def get_all_e(base_dir):
     #Checks for existing E_pristine.csv 
     if 'E_pristine.csv' in os.listdir(base_dir):
         print('E_pristine.csv already exists. Exiting...')
-        sys.exit()
+        return
     
     mod_dirs = []
     for root, dirs, files in os.walk(base_dir):
