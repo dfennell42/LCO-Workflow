@@ -42,12 +42,12 @@ def modify_pairs(atoms,atom_pairs):
 
 def modify(base_dir):
     '''Modifies structures based of user input. '''
-    pkgdir = sys.modules['lco_workflow'].__path__[0]
+    pkgdir = sys.modules['delafossite_wf'].__path__[0]
     fullpath = os.path.join(pkgdir, 'POSCAR')
     shutil.copy(fullpath, base_dir)
     # Read POSCAR 
     atoms = read(os.path.join(base_dir,'POSCAR'))
-    print('atoms read')
+    #print('atoms read')
 
     # Define number of each element in POSCAR
     with open(os.path.join(base_dir,'POSCAR'), 'r') as P:
