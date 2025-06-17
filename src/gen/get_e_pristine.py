@@ -44,7 +44,7 @@ def get_all_e(base_dir):
         return
     
     #get modifications from ModsCo.txt
-    mods = read_file(base_dir, 'ModsCo.txt')
+    mods = read_file(base_dir, 'Mods.txt')
     #convert the commas to dashes so the csv won't separate incorrectly
     mods_str = []
     for m in mods:
