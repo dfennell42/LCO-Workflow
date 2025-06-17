@@ -108,6 +108,8 @@ def get_all_e(mod_dir,mods,base_dir):
             prev_pair = os.path.basename(dirname).split('_')[1]
             #get evac relative to previous structure 
             prev = get_e(dirname)
+            if prev == None:
+                prev = get_ep(base_dir,mod_dir)
             if os.path.basename(dirname).startswith('O_Pair'):
                 o = 0
             elif os.path.basename(dirname).startswith('Li_Pair'):
