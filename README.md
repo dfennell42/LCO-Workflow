@@ -1,11 +1,13 @@
 ## LCO Modifications Workflow CLI
 #### Author: Dorothea Fennell (dfennell1@bnl.gov)
-**Version**: 0.2.7
+**Version**: 0.3.0
 
 A command line interface (CLI) tool for the LCO Modifications Workflow built by Jennifer Bjorklund and Dorothea Fennell.
 
 #### Commands:
 ***Commands must be preceded by wf.***
+
+*init*: Used to set up settings and base files for workflow tool.
 
 *modify*: Modifies pristine POSCAR, creates Modification_# directories, and sets up pristine surface calculations. Equivalent to bash script **run-all-LCOmod-workflow1-5.sh**. 
 ***NOTE:*** You must create the ModsCo.txt file yourself. 
