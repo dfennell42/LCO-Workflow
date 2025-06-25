@@ -6,13 +6,13 @@ import sys
 import shutil
 #import from files
 #bash script run-all
-from .modifyLCO import modify_lco
+from .modifystructure import modify
 from .MagMom_recursive import process_poscar_files
 from .POTCAR_cat import process_directories
 from .VASP_input import generate_vasp_inputs_in_dir
 from .modINCAR import update_incar_files_with_magmom
 #bash script run-removal
-from .remove_li_o_pairs import process_vasp_inputs
+from .remove_pairs import process_vasp_inputs
 from .removed_pairs_INCARmod import process_pairs_removed_dirs
 #bash script process data
 from .get_e_pristine import get_all_e
@@ -34,7 +34,7 @@ app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
 @app.command()
 def modify():
     '''Modifies LCO structure based on user input. Needs ModsCo.txt '''
-    modify_lco()
+    modify()
     process_poscar_files()
     process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac = False)
     generate_vasp_inputs_in_dir(os.getcwd(),custom_incar_params = {

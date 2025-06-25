@@ -99,11 +99,11 @@ def find_files_recursive(pattern):
 
 def process_poscar_files():
     # Find all POSCAR files with the pattern POSCAR_modified_*.vasp
-    poscar_files = find_files_recursive("POSCAR_modified_")
+    poscar_files = find_files_recursive("POSCAR_")
     poscar_files = [file for file in poscar_files if file.endswith(".vasp")]
 
     if not poscar_files:
-        print("No POSCAR_modified_*.vasp files found!")
+        print("No POSCAR_*.vasp files found!")
         return
 
     print(f"Found {len(poscar_files)} files.")
