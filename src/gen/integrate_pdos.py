@@ -87,8 +87,8 @@ def int_d_states(filelist):
         e_tot, spin = int_pdos(data,5,6,-2,0)
         
         #integrate from -8 to -2 to get d/p hybridization
-        hdp = int_pdos(data,5,6,-8,-2,diff=False)
-        
+        tot_win = int_pdos(data,5,6,-8,0,diff=False)
+        hdp = tot_win - e_tot
         #determine atom
         filename = os.path.basename(file)
         atom = filename.split('_')
