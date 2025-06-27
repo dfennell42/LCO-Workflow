@@ -25,12 +25,16 @@ from .vasp_pdos import process_pdos_dirs as parse_pdos_dirs
 from .integrate_pdos import integrate_all_pdos
 #plot pdos
 from .PDOS_plotter import plot_pdos
-
+#initialize
+from .intialize import init_settings
 #create app
 app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
 
 #create commands
-
+@app.command()
+def init():
+    '''Initializes workflow settings.'''
+    init_settings()
 @app.command()
 def modify():
     '''Modifies LCO structure based on user input. Needs ModsCo.txt '''
@@ -90,7 +94,8 @@ def submit(
         ):
     '''Submits vasp calculations.'''
     pkgdir = sys.modules['lco_workflow'].__path__[0]
-    fullpath = os.path.join(pkgdir, 'vasp.sh')
+    filedir = os.path.expanduser('~/wf-user-files')
+    fullpath = os.path.join(filedir, 'vasp.sh')
     shutil.copy(fullpath, os.getcwd())
     if calc.lower() == 'struc':
         if vac:
