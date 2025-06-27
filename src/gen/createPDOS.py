@@ -5,11 +5,13 @@ Changelog:
     4-23-25: Created, comments added 
     4-30-25: Changed POSCAR to CONTCAR and added a couple lines to rename CONTCAR to POSCAR in new PDOS dir.
     5-7-25: Added ability to set up pdos for pristine or vacancy structures based on user input
+    6-2025: Modified to generalize script.
+    6-25-25: Modified to pull PDOS_INCAR.txt from user directory
 """
+
 #import modules
 import os
 import shutil
-import sys
 
 
 def copy_vasp_files(source_dir, dest_dir):
@@ -43,8 +45,8 @@ def create_pdos(input_dir,base_directory):
     
     #Copy PDOS_INCAR.txt file - has to be separate as it is not in Modification_# dir
     #copy from package to base dir
-    pkgdir = sys.modules['delafossite_wf'].__path__[0]
-    fullpath = os.path.join(pkgdir, 'PDOS_INCAR.txt')
+    userdir = os.path.expanduser('~/wf-user-files')
+    fullpath = os.path.join(userdir, 'PDOS_INCAR.txt')
     shutil.copy(fullpath, base_directory)
     #copy from base dir to mod dir
     for file in os.listdir(base_directory):

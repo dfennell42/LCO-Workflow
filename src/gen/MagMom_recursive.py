@@ -108,13 +108,67 @@ def process_poscar_files():
 
     print(f"Found {len(poscar_files)} files.")
     #copy SpinPairs file to dir
-    pkgdir = sys.modules['delafossite_wf'].__path__[0]
-    fullpath = os.path.join(pkgdir, 'SpinPairs.txt')
+    userdir = os.path.expanduser('~/wf-user-files')
+    fullpath = os.path.join(userdir, 'SpinPairs.txt')
     shutil.copy(fullpath, os.getcwd())
     
     spin_file = "SpinPairs.txt"
     if not os.path.exists(spin_file):
-        print(f"SpinPairs.txt not found in the directory.")
+        print("SpinPairs.txt not found in the directory.")
+        return
+
+    for poscar_file in poscar_files:
+        print(f"Processing {poscar_file}...")
+
+        # Read POSCAR and SpinPairs
+        elements, num_atoms, atom_to_element = read_poscar(poscar_file)
+        spin_pairs = read_spin_pairs(spin_file)
+
+        # Assign magnetic moments
+        magmom = assign_magnetic_moments(atom_to_element, spin_pairs)
+
+        # Generate MAGMOM line
+        magmom_line = generate_magmom_line(elements, num_atoms, magmom)
+
+        # Write output MAGMOM line to file
+        output_file = f"{poscar_file.replace('.vasp', '_MAGMOM.txt')}"
+        with open(output_file, "w") as f:
+            f.write(f"MAGMOM = {magmom_line}\n")
+        
+        print(f"Generated MAGMOM line saved to {output_file}.")
+        
+def process_pair_rem_files():
+    # Find all POSCAR files with the pattern POSCAR_modified_*.vasp
+    def get_dirs():
+        '''Runs through all directories in base directory and returns list of vacancy directories.'''
+        vac_dirs=[]
+        for root, dirs, files in os.walk(os.getcwd()):
+            if root.endswith('Removed') and 'INCAR' in os.listdir(root):
+                vac_dirs.append(root)
+        vac_dirs.sort()
+        return vac_dirs
+    vac_dirs = get_dirs()
+    poscar_files = []
+    for vac_dir in vac_dirs:
+        for root, dirs, files in os.walk(vac_dir):
+            for file in files:
+                if "POSCAR_" in file:
+                    poscar_files.append(os.path.join(root, file))
+    poscar_files = [file for file in poscar_files if file.endswith(".vasp")]
+
+    if not poscar_files:
+        print("No POSCAR_*.vasp files found!")
+        return
+
+    print(f"Found {len(poscar_files)} files.")
+    #copy SpinPairs file to dir
+    userdir = os.path.expanduser('~/wf-user-files')
+    fullpath = os.path.join(userdir, 'SpinPairs.txt')
+    shutil.copy(fullpath, os.getcwd())
+    
+    spin_file = "SpinPairs.txt"
+    if not os.path.exists(spin_file):
+        print("SpinPairs.txt not found in the directory.")
         return
 
     for poscar_file in poscar_files:
