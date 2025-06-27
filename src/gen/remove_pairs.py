@@ -116,7 +116,7 @@ def process_vasp_inputs(base_directory):
     i = 1
     for file in os.listdir(base_directory):
         if file.endswith('_pairs.txt'):
-            element = file.split('_')[0]
+            element = file.split('_')[0].capitalize()
             print(f'{i}:Remove {element} pairs')
             pair_files.append(file)
             i += 1
@@ -124,7 +124,7 @@ def process_vasp_inputs(base_directory):
 
     for i,element in enumerate(pair_files,1):
         if float(choice) == i:
-            element_name = element.split('_')[0]
+            element_name = element.split('_')[0].capitalize()
             pairs = get_pairs(atoms, element_name)
             selected_indices = get_user_selection(pairs, element_name)
         

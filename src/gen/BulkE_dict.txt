@@ -1,0 +1,13 @@
+#If adding a species to this file, ensure the value is per atom and in eV
+H:-3.475
+Li:-1.91
+O:-4.515
+Al:-3.76
+Ti:-7.84
+V:-8.996
+Mn:-8.97
+Fe:-8.24
+Co:-6.84
+Ni:-5.47
+Cu:-3.73
+Zn:-1.11

@@ -2,7 +2,6 @@ from ase.io import read, write
 import os
 import copy
 import shutil
-import sys
 
 # Save pairs to text files
 def save_pairs_to_file(pairs, filename):
@@ -42,8 +41,8 @@ def modify_pairs(atoms,atom_pairs):
 
 def modify(base_dir):
     '''Modifies structures based of user input. '''
-    pkgdir = sys.modules['delafossite_wf'].__path__[0]
-    fullpath = os.path.join(pkgdir, 'POSCAR')
+    userdir = os.path.expanduser('~/wf-user-files')
+    fullpath = os.path.join(userdir, 'POSCAR')
     shutil.copy(fullpath, base_dir)
     # Read POSCAR 
     atoms = read(os.path.join(base_dir,'POSCAR'))

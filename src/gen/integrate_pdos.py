@@ -101,7 +101,7 @@ def int_d_states(filelist):
 def print_data(pdos_dir,data,fname,header):
     '''Prints data to csv file. '''
     with open(f'{pdos_dir}/{fname}.csv','w',encoding=None) as f:
-        f.write()
+        f.write(header)
         f.writelines(data)
         f.close
     print(f'{pdos_dir} csv created.')

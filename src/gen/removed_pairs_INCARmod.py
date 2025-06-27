@@ -1,5 +1,5 @@
 import os
-from .MagMom_recursive import process_poscar_files
+from .MagMom_recursive import process_pair_rem_files
 
 def read_file(r_dir, file):
     '''Reads given file in directory and returns list of lines'''
@@ -43,5 +43,6 @@ def modify_incar(incar_path, root):
 def process_pairs_removed_dirs(base_directory):
     """Finds all *_Pairs_Removed directories and edits their INCAR files."""
     for root, dirs, files in os.walk(base_directory):
-        if "INCAR" in files:
+        if "INCAR" in files and root.endswith('_Removed'):
+            process_pair_rem_files()
             modify_incar(os.path.join(root, "INCAR"),root)
