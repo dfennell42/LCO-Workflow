@@ -80,7 +80,7 @@ def get_os(atom,e_tot):
     valence = {'Mn':7, 'Fe':8, 'Co':9, 'Ni':10}
     element=atom[:2]
     if element in valence.keys():
-        oxs = valence[f'element'] - e_tot
+        oxs = valence[f'{element}'] - e_tot
     else:
         oxs = 0
     return oxs
