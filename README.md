@@ -1,13 +1,13 @@
 ## LCO Modifications Workflow CLI
 #### Author: Dorothea Fennell (dfennell1@bnl.gov)
-**Version**: 0.3.0
+**Version**: 0.3.1
 
 A command line interface (CLI) tool for the LCO Modifications Workflow built by Jennifer Bjorklund and Dorothea Fennell.
 
 #### Commands:
 ***Commands must be preceded by wf.***
 
-*init*: Used to set up settings and base files for workflow tool.
+*init*: Sets up directory ~/wf-user-files for user files (POSCAR, SpinPairs.txt, PDOS_INCAR.txt, vasp.sh) and other settings. These are the versions of the files the workflow will pull from, so if you modify a file, it’ll pull from this directory.
 
 *modify*: Modifies pristine POSCAR, creates Modification_# directories, and sets up pristine surface calculations. Equivalent to bash script **run-all-LCOmod-workflow1-5.sh**. 
 ***NOTE:*** You must create the ModsCo.txt file yourself. 
