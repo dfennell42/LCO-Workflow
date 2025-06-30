@@ -75,6 +75,16 @@ def int_pdos(data,up_idx,down_idx,lower,upper, diff=True):
         tota = tot_e
         return tota
     
+def get_os(atom,e_tot):
+    """Gets oxidation state of metal."""
+    valence = {'Mn':7, 'Fe':8, 'Co':9, 'Ni':10}
+    element=atom[:2]
+    if element in valence.keys():
+        oxs = valence[f'element'] - e_tot
+    else:
+        oxs = 0
+    return oxs
+
 def int_d_states(filelist):
     """Integrates the d states of the metal atoms for the total number of electrons and d/p hybridization. """
     #create data lists
@@ -93,9 +103,9 @@ def int_d_states(filelist):
         filename = os.path.basename(file)
         atom = filename.split('_')
         atom = atom[0]
-        
+        ox = get_os(atom,e_tot)
         #append data to list
-        m_data.append(f'\n{atom},{e_tot},{spin},{hdp}')
+        m_data.append(f'\n{atom},{e_tot},{ox},{spin},{hdp}')
     return m_data
 
 def print_data(pdos_dir,data,fname,header):
@@ -131,9 +141,9 @@ def integrate_all_pdos(base_dir):
                         mod_name = p
                 selected_data.append(f'\n{mod_name},{x}')
         #print data to csv
-        mod_header = 'Atom,e_tot,spin,H d/p'
+        mod_header = 'Atom,e_tot,OS,spin,H d/p'
         print_data(pdos_dir,m_data,'integrated-pdos',mod_header)
-    selected_header = 'Modification dir,Atom,e_tot,spin,H d/p'
+    selected_header = 'Modification dir,Atom,e_tot,OS,spin,H d/p'
     print_data(base_dir,selected_data,'selected-int-pdos',selected_header)
 
     
