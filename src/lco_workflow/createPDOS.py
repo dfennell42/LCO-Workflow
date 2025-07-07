@@ -67,8 +67,17 @@ def process_vasp_inputs(base_directory):
             if root.endswith("VASP_inputs") and "CONTCAR" in files:
                 input_dirs.append(root)
         elif input_choice == '2':
-            if root.endswith("_Removed") and "CONTCAR" in files:
-                input_dirs.append(root)
+            print('\nWould you like to create PDOS for lithium or oxygen vacancy structures?')
+            print('1: Li')
+            print('2: O')
+            vac_choice = input("Enter the number of your choice: ")
+            if root.endswith("_Removed"):
+                if vac_choice == '1':
+                    if os.path.basename(root).startswith('Li_') and "CONTCAR" in files:
+                        input_dirs.append(root)
+                elif vac_choice == '2':
+                    if os.path.basename(root).startswith('O_') and "CONTCAR" in files:
+                        input_dirs.append(root)
     
     if not input_dirs:
         print("No input directories found. Have you run the initial calculations?")
