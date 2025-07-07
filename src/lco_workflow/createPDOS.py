@@ -61,16 +61,21 @@ def process_vasp_inputs(base_directory):
     print('1: Pristine')
     print('2: Vacancy')
     input_choice = input("Enter the number of your choice: ")
+
+    if input_choice == '2':
+        print('\nWould you like to create PDOS for lithium or oxygen vacancy structures?')
+        print('1: Li')
+        print('2: O')
+        vac_choice = input("Enter the number of your choice: ")
+    else:
+        #so it doesn't yell at me about not having a value
+        vac_choice = '0'
     # Collect all VASP_inputs directories
     for root, dirs, files in os.walk(base_directory):
         if input_choice == '1':
             if root.endswith("VASP_inputs") and "CONTCAR" in files:
                 input_dirs.append(root)
         elif input_choice == '2':
-            print('\nWould you like to create PDOS for lithium or oxygen vacancy structures?')
-            print('1: Li')
-            print('2: O')
-            vac_choice = input("Enter the number of your choice: ")
             if root.endswith("_Removed"):
                 if vac_choice == '1':
                     if os.path.basename(root).startswith('Li_') and "CONTCAR" in files:
