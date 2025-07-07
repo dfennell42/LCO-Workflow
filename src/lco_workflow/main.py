@@ -27,6 +27,8 @@ from .integrate_pdos import integrate_all_pdos
 from .PDOS_plotter import plot_pdos
 #initialize
 from .intialize import init_settings
+#error check
+from .err_check import err_fix
 #create app
 app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
 
@@ -106,3 +108,7 @@ def submit(
     elif calc.lower() == 'pdos':
         fpath = os.path.join(pkgdir,'submitpdos-vasp.sh')
         os.system(f'bash {fpath}')
+        
+@app.command()
+def check():
+    err_fix(os.getcwd())
