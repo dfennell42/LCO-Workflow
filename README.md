@@ -1,6 +1,6 @@
 ## LCO Modifications Workflow CLI
 #### Author: Dorothea Fennell (dfennell1@bnl.gov)
-**Version**: 0.3.1
+**Version**: 0.4.0
 
 A command line interface (CLI) tool for the LCO Modifications Workflow built by Jennifer Bjorklund and Dorothea Fennell.
 
@@ -13,6 +13,8 @@ A command line interface (CLI) tool for the LCO Modifications Workflow built by 
 ***NOTE:*** You must create the ModsCo.txt file yourself. 
 
 *removepairs*: Creates Li or O vacancies in pristine structures and sets up vacancy calculations. Equivalent to bash script **run-removal-from-pristine.sh**.
+
+*check*: Checks calculations for errors. If error is PRICELV, ZBRENT, FEXCF, or a timeout, script will perform the appropriate fix and resubmit the calculations.
 
 *getE*: Processes data from pristine/vacancy calculations and generates two csv files: E_pristine.csv and E_vac.csv. Equivalent to bash script **process-data.sh**.
 
