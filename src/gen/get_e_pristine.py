@@ -3,6 +3,7 @@ Get total energy of pristine structures
 Author: Dorothea Fennell
 Changelog:
     5-14-25: Created, comments added.
+    7-9-25: Modified to sort by modification directory number, with sorting dir number by int rather than string to avoid 10 coming before 2. 
 """
 #import modules
 import os
@@ -26,24 +27,31 @@ def get_e(e_dir):
         e = toten[-1].split()
         e = float(e[4])
         return e
+    
+def sort_by_dir(data):
+    '''Sorts dirs by number'''
+    dirname = data.split(',')[0]
+    dir_num = dirname.split('_')[1]
+    num = int(dir_num)
+    return num
 
 def get_all_e(base_dir):
     '''Gets total energy of pristine surfaces.Returns file of pristine energies.'''
     #Checks for existing E_pristine.csv 
     if 'E_pristine.csv' in os.listdir(base_dir):
         print('E_pristine.csv already exists.')
-        sys.exit()
+        return
     
     mod_dirs = []
     for root, dirs, files in os.walk(base_dir):
         if os.path.basename(root).startswith('Modification_'):
             mod_dirs.append(root)
-    mod_dirs.sort()
     if not mod_dirs:
         print('No modification directories found.')
         return
     
-    mods = read_file(base_dir, 'Mods.txt')
+    #get modifications from ModsCo.txt
+    mods = read_file(base_dir, 'ModsCo.txt')
     #convert the commas to dashes so the csv won't separate incorrectly
     mods_str = []
     for m in mods:
@@ -69,6 +77,8 @@ def get_all_e(base_dir):
         print('No values found. Exiting...')
         sys.exit()
     
+    #sort e_list
+    e_list.sort(key=sort_by_dir)
     #write file
     with open(f'{base_dir}/E_pristine.csv','w',encoding=None) as f:
         f.write('Mod dir,Mod,Total E')
