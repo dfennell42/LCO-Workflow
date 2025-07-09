@@ -111,4 +111,5 @@ def submit(
         
 @app.command()
 def check():
+    '''Checks vasp.out for errors and fixes and resubmits calculations if possible.'''
     err_fix(os.getcwd())

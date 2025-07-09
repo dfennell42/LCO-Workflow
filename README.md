@@ -14,8 +14,6 @@ A command line interface (CLI) tool for the LCO Modifications Workflow built by 
 
 *removepairs*: Creates Li or O vacancies in pristine structures and sets up vacancy calculations. Equivalent to bash script **run-removal-from-pristine.sh**.
 
-*check*: Checks calculations for errors. If error is PRICELV, ZBRENT, FEXCF, or a timeout, script will perform the appropriate fix and resubmit the calculations.
-
 *getE*: Processes data from pristine/vacancy calculations and generates two csv files: E_pristine.csv and E_vac.csv. Equivalent to bash script **process-data.sh**.
 
 *pdos*: Sets up PDOS calculations. Equivalent to bash script **run-PDOS.sh**.
@@ -28,3 +26,4 @@ A command line interface (CLI) tool for the LCO Modifications Workflow built by 
 
 *submit*: Submits vasp calculations. Takes argument for which type of calculations to submit: *'struc'* for pristine or vacancy structure calculations, or *'pdos'* for PDOS calculations. Default is *'struc'*. Equivalent to bash scripts **submitall-vasp.sh** and **submitpdos-vasp.sh**.
 
+*check*: Checks calculations for errors. If error is PRICELV, ZBRENT, FEXCF, or a timeout, script will perform the appropriate fix and resubmit the calculations.
