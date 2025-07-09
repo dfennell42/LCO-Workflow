@@ -9,6 +9,7 @@ Changelog:
     5-21-25: Added function to get pristine energy from E_pristine.csv if OUTCAR for pristine structure can't be found. If more than one element has been removed, script calculates
             e-vac from pristine structure and from previous structure
     5-30-25: Modified get_pair_numbers in case of 0 Li or O. 
+    7-9-25: Modified to sort by pair removed then by modification directory number, with sorting dir number by int rather than string to avoid 10 coming before 2. 
 """
 #import modules
 import os
@@ -129,13 +130,22 @@ def calc_e_vac(e_p,vac,vac_dir,li,o):
     ev = (vac+(li * li_bulk) + (o2 * (o/2)) - e_p)/2
     return ev
 
+def sort_data(data):
+    '''Sorts data by atom_pair first then by dir number'''
+    data_list = data.split(',')
+    atom_pair = data_list[1]
+    dirname = data_list[0].split('/')
+    dir_num = dirname[0].split('_')[1]
+    num = int(dir_num)
+    return (atom_pair,num)
+
 def process_e_vac(base_dir):
     '''Gets e_vac recursively for all dirs and returns it in one csv '''
     mod_dirs = []
     for root, dirs, files in os.walk(base_dir):
         if os.path.basename(root).startswith('Modification_'):
             mod_dirs.append(root)
-    mod_dirs.sort()
+
     if not mod_dirs:
         print('No modification directories found.')
         return
@@ -163,7 +173,8 @@ def process_e_vac(base_dir):
     if e_vac_tot == None:
         print('No values found. Exiting...')
         sys.exit()
-    
+    #sort data
+    e_vac_tot.sort(key=sort_data)
     #write file
     with open(f'{base_dir}/E_vac.csv','w',encoding=None) as f:
         f.write('Modification,Atom Pair,Total E,E_vac (pristine),E_vac (from prev vacancy),# of Li removed, # of O removed')

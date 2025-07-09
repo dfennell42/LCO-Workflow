@@ -3,7 +3,7 @@ Error checker
 Author: Dorothea Fennell
 Changelog:
     7-2-25: Created, comments added
-    7-7-25: Fixed time_chk so it only checks most recent slurm output. Fixed sbatch command. 
+    7-7-25: Fixed time_chk so it only checks most recent slurm output
 """
 #import modules
 import os
