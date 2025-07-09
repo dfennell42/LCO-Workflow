@@ -167,4 +167,7 @@ def sort_by_index(data):
         index = int(data_list[1])
     elif len(data_list) == 7:
         index = int(data_list[2])
-    return index
+    dirname = data_list[0]
+    dir_num = dirname.split('_')[1]
+    num = int(dir_num)
+    return (index, num)
