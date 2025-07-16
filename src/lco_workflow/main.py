@@ -29,6 +29,8 @@ from .PDOS_plotter import plot_pdos
 from .intialize import init_settings
 #error check
 from .err_check import err_fix
+#descriptor extraction
+from .get_descriptors import extract_desc
 #create app
 app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
 
@@ -88,6 +90,11 @@ def integrate():
 def plot():
     '''Plots PDOS'''
     plot_pdos(os.getcwd())
+
+@app.command()
+def extract():
+    '''Gets ML descriptors from PDOS and optimization calculations.'''
+    extract_desc(os.getcwd())
     
 @app.command()
 def submit(
@@ -110,6 +117,9 @@ def submit(
         os.system(f'bash {fpath}')
         
 @app.command()
-def check():
+def check(
+        submit:Annotated[bool,typer.Option("--no-submit","-n",help='Use -n or --no-submit to run check without autosubmitting calculations')] = True
+        ):
     '''Checks vasp.out for errors and fixes and resubmits calculations if possible.'''
-    err_fix(os.getcwd())
+    err_fix(os.getcwd(),submit)
+    

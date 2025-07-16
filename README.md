@@ -1,6 +1,6 @@
 ## LCO Modifications Workflow CLI
 #### Author: Dorothea Fennell (dfennell1@bnl.gov)
-**Version**: 0.4.2
+**Version**: 0.5.0
 
 A command line interface (CLI) tool for the LCO Modifications Workflow built by Jennifer Bjorklund and Dorothea Fennell.
 
@@ -23,6 +23,8 @@ A command line interface (CLI) tool for the LCO Modifications Workflow built by 
 *integrate*: Integrates the metal d-states without parsing the files first. ***Note:*** Files must be parsed before integration. The parse command parses **AND** integrates, so this command is only if integration needs to be performed on already parsed files.
 
 *plot*: Runs PDOS-plotter.py, which plots PDOS based on user input. 
+
+*extract*:Extracts machine learning descriptors, including but not limited to formation energy, optimized bond lengths, d band centers. See Workflow Guide document for list of all descriptors.
 
 *submit*: Submits vasp calculations. Takes argument for which type of calculations to submit: *'struc'* for pristine or vacancy structure calculations, or *'pdos'* for PDOS calculations. Default is *'struc'*. Equivalent to bash scripts **submitall-vasp.sh** and **submitpdos-vasp.sh**.
 

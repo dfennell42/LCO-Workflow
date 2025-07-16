@@ -53,7 +53,7 @@ def continue_calc(file):
     """Copies CONTCAR to POSCAR to continue calculation."""
     dirname = os.path.dirname(file)
     if os.path.exists(f'{dirname}/CONTCAR'):
-        os.rename(f'{dirname}/CONTCAR',f'{dirname}/POSCAR')
+        shutil.copy(os.path.join(dirname,'CONTCAR'),os.path.join(dirname,'POSCAR'))
     else:
         print(f'CONTCAR not found in {dirname}.')
         
@@ -78,7 +78,7 @@ def submit_calcs(file):
     print(f'Submitting calculation in f{dirname}...')
     sp.run(['sbatch',f'{vasppath}'], check=True)
     
-def err_fix(base_dir):
+def err_fix(base_dir,submit=True):
     """ Fixes errors if possible or prints error if not."""
     #gets error files
     output_files = find_files(base_dir)
@@ -97,6 +97,7 @@ def err_fix(base_dir):
     
     if not err_files:
         print('No errors found. All calculations complete.')
+        return
     
     #fix errors
     for file,msg in err_files:
@@ -113,10 +114,12 @@ def err_fix(base_dir):
                     continue_calc(file)
                 elif err =='timeout':
                     continue_calc(file)
-                submit_calcs(file)
             else:
                 print(f'Error: {err} for calculation in {dirname}. Must be fixed by hand.')
-        
+        if submit == True:
+            submit_calcs(file)
+    if submit != True:
+        print('Errors fixed, but calculations not submitted.')
 #run in terminal
 #if __name__ == "__main__":
    # base_dir = os.getcwd()
