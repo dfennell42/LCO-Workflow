@@ -113,6 +113,7 @@ def err_fix(base_dir,submit=True):
                 elif err == 'fexcf':
                     continue_calc(file)
                 elif err =='timeout':
+                    print(f'Error: Calculation in {dirname} timed out.')
                     continue_calc(file)
             else:
                 print(f'Error: {err} for calculation in {dirname}. Must be fixed by hand.')
