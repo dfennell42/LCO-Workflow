@@ -93,17 +93,7 @@ def option1(f,fig, r=1, c =1):
     for i, orb in enumerate(orbs,1):
         if not(i==1 or i==2):
             fig.add_scatter(x=data[:,i], y=energy, mode='lines',fill='tozerox', name = f'{orb}',row = r, col = c)
-            
-        if (str(name[0]).startswith("O") or str(name[0]).startswith('Al')):
-            fig.update_traces(visible='legendonly',selector=dict(name='d up'), row = r,col=c)
-            fig.update_traces(visible='legendonly',selector=dict(name='d down'),row = r,col=c)
-        else:
-            fig.update_traces(visible='legendonly',selector=dict(name='p up'),row = r,col=c)
-            fig.update_traces(visible='legendonly',selector=dict(name='p down'),row = r,col=c)
-    #update axes if necessary
-    if str(name[0]).startswith('Al'):
-        fig.update_xaxes(range =[-0.2,0.2],row=r, col=c)
-                        
+
     #add plot title
     fig.update_layout(title_text = f'{name[0]}')
     
@@ -126,10 +116,6 @@ def option2(f,fig,fermi,r=1,c=1):
                 fig.add_scatter(x=x, y=energy, mode='lines',fill='tozerox', name = f'{orb}',row = r, col = c)
             else:
                 fig.add_scatter(x=data[:,i], y=energy, mode='lines',fill='tozerox', name = f'{orb}',row = r, col = c)
-
-        #update axes if necessary
-        if str(name[0]).startswith('Al'):
-            fig.update_xaxes(range =[-0.2,0.2], row =r, col=c)
         #add plot title
         fig.update_layout(title_text = f'{name[0]}')
     return fig, name
@@ -148,8 +134,7 @@ def plot_pdos(base_dir):
     print("\nWould you like to plot the PDOS of all structures, the pristine structures, or the vacancy structures?")
     print("1: All")
     print("2: Pristine")
-    print("3: Li vacancy")
-    print("4: O vacancy")
+    print("3: Vacancy")
     struc = input('Enter the number of your choice: ')
     check_input(struc)
     pdos_dirs = []
@@ -162,10 +147,7 @@ def plot_pdos(base_dir):
                 if root.endswith('VASP_inputs/PDOS'):
                     pdos_dirs.append(root)
             elif struc =='3':
-                if root.endswith('Li_Pair*_Removed/PDOS'):
-                    pdos_dirs.append(root)
-            elif struc =='4':
-                if root.endswith('O_Pair*_Removed/PDOS'):
+                if root.endswith('_Removed/PDOS'):
                     pdos_dirs.append(root)
     else:
         dir_num = rec.split()
@@ -179,10 +161,7 @@ def plot_pdos(base_dir):
                         if root.endswith('VASP_inputs/PDOS'):
                             pdos_dirs.append(root)
                     elif struc =='3':
-                        if root.endswith('Li_Pair*_Removed/PDOS'):
-                            pdos_dirs.append(root)
-                    elif struc =='4':
-                        if root.endswith('O_Pair*_Removed/PDOS'):
+                        if root.endswith('_Removed/PDOS'):
                             pdos_dirs.append(root)
     
     print("\nPlease input the files you'd like to plot")

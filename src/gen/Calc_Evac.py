@@ -9,6 +9,7 @@ Changelog:
     5-21-25: Added function to get pristine energy from E_pristine.csv if OUTCAR for pristine structure can't be found. If more than one element has been removed, script calculates
             e-vac from pristine structure and from previous structure
     5-30-25: Modified get_pair_numbers in case of 0 Li or O. 
+    7-23-25: Modified for generalized version. 
 """
 #import modules
 import os
@@ -32,18 +33,25 @@ def read_file(r_dir, file):
 
 def get_pair_numbers(vac_dir):
     '''Get number of pairs removed.'''
-    pos = read_file(vac_dir,'POSCAR')
-    if pos[5].split()[0].strip()=='Li':
-        li_num = pos[6].split()[0]
-    else:
-        li_num = 0
-    if pos[5].split()[-1].strip()=='O':
-        o_num = pos[6].split()[-1]
-    else:
-        o_num = 0
-    li = 18 - float(li_num)
-    o = (36 - float(o_num))
-    return li, o 
+    pris_dir = os.path.dirname(vac_dir)
+    p_pos = read_file(pris_dir,'POSCAR')
+    v_pos = read_file(vac_dir,'POSCAR')
+    p_ele = p_pos[5].split()
+    p_c = p_pos[6].split()
+    v_ele = v_pos[5].split()
+    v_c = v_pos[6].split()
+    ele_vacs = {}
+    for i,ele in enumerate(p_ele):
+        if p_ele[i] == v_ele[i]:
+            if p_c[i] == v_c[i]:
+                pass
+            elif p_c[i] != v_c[i]:
+                num = float(p_c[i]) - float(v_c[i])
+                ele_vacs.update({f'{p_ele[i]}':num})
+        elif p_ele[i] != v_ele[i]:
+            ele_vacs.update({f'{p_ele[i]}':float(p_c[i])})
+    print(ele_vacs)
+    return ele_vacs
 
 def get_e(e_dir):
     '''Gets final energy from OUTCAR file.'''
@@ -93,8 +101,8 @@ def get_all_e(mod_dir,mods,base_dir):
     vac_tot = []
     for vac_dir in vac_dirs:
         vac = get_e(vac_dir)
-        li, o = get_pair_numbers(vac_dir)
-        e_vac = calc_e_vac(e_p,vac,vac_dir,li,o)
+        ele_vacs = get_pair_numbers(vac_dir)
+        e_vac = calc_e_vac(e_p,vac,vac_dir,ele_vacs)
         pair = os.path.basename(vac_dir).split('_')[1]
         element = os.path.basename(vac_dir).split('_')[0]
         dirname = os.path.dirname(vac_dir)
@@ -102,29 +110,36 @@ def get_all_e(mod_dir,mods,base_dir):
             for i, mod in enumerate(mods,1):
                 if f'Modification_{i}' == f'{mod_name}':
                     mod = mod.strip('-')
-                    vac_tot.append(f'\n{mod_name}/{mod},{element}_{pair},{vac},{e_vac},,{li},{o}')
+                    vac_tot.append(f'\n{mod_name}/{mod},{element}_{pair},{vac},{e_vac},')
         elif dirname.endswith('Removed'):
             prev_el = os.path.basename(dirname).split('_')[0]
             prev_pair = os.path.basename(dirname).split('_')[1]
             #get evac relative to previous structure 
             prev = get_e(dirname)
-            if os.path.basename(dirname).startswith('O_Pair'):
-                o = 0
-            elif os.path.basename(dirname).startswith('Li_Pair'):
-                li = 0
-            ev_from_prev = calc_e_vac(prev, vac, vac_dir,li,o)
+            ev_from_prev = calc_e_vac(prev, vac, vac_dir,ele_vacs)
             for i, mod in enumerate(mods,1):
                 if f'Modification_{i}' == f'{mod_name}':
                     mod = mod.strip('-')
-                    vac_tot.append(f'\n{mod_name}/{mod},{prev_el}_{prev_pair}/{element}_{pair},{vac},{e_vac},{ev_from_prev},{li},{o}')
+                    vac_tot.append(f'\n{mod_name}/{mod},{prev_el}_{prev_pair}/{element}_{pair},{vac},{e_vac},{ev_from_prev}')
     
     return vac_tot
     
-def calc_e_vac(e_p,vac,vac_dir,li,o):
+def calc_e_vac(e_p,vac,vac_dir,ele_vacs):
     '''Calculates vacancy energy'''
-    li_bulk = -1.9072204
-    o2 = -9.03
-    ev = (vac+(li * li_bulk) + (o2 * (o/2)) - e_p)/2
+    userdir = os.path.expanduser('~/wf-user-files')
+    bulk_dict = read_file(userdir, 'BulkE_dict.txt')
+    vacancies=[]
+    for ele in ele_vacs.keys():
+        for i in bulk_dict:
+            if i.startswith(ele):
+                num = float(ele_vacs.get(ele))
+                bulk = float(i.split(':')[1])
+                vac_e = num * bulk
+                vacancies.append(vac_e)
+    tot_vac = 0
+    for v in vacancies:
+        tot_vac += v
+    ev = (vac+tot_vac - e_p)/2
     return ev
 
 def process_e_vac(base_dir):
@@ -139,7 +154,7 @@ def process_e_vac(base_dir):
         return
     
     #get modifications from ModsCo.txt
-    mods = read_file(base_dir, 'ModsCo.txt')
+    mods = read_file(base_dir, 'Mods.txt')
     #convert the commas to dashes so the csv won't separate incorrectly
     mods_str = []
     for m in mods:
@@ -164,6 +179,6 @@ def process_e_vac(base_dir):
     
     #write file
     with open(f'{base_dir}/E_vac.csv','w',encoding=None) as f:
-        f.write('Modification,Atom Pair,Total E,E_vac (pristine),E_vac (from prev vacancy),# of Li removed, # of O removed')
+        f.write('Modification,Atom Pair,Total E,E_vac (pristine),E_vac (from prev vacancy)')
         f.writelines(e_vac_tot)
         f.close

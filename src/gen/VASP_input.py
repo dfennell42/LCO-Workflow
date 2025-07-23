@@ -37,9 +37,21 @@ def generate_vasp_inputs(vasp_file, custom_incar_params=None):
 
     print(f"VASP inputs generated in: {input_dir}")
 
+def get_incar_params():
+    '''Gets custom incar parameters from wf-user-files directory'''
+    userdir = os.path.expanduser('~/wf-user-files')
+    param_file = os.path.join(userdir,'custom_incar_params.txt')
+    custom_incar_params = {}
+    with open(param_file, 'r') as file:
+        for line in file:
+            key, value = line.strip().split(':', 1)
+            custom_incar_params[key.strip()] = value.strip()
+    return custom_incar_params
+
 # Function to search for .vasp files and generate VASP inputs
-def generate_vasp_inputs_in_dir(root_dir, custom_incar_params=None):
+def generate_vasp_inputs_in_dir(root_dir):
     # Walk through all subdirectories of the root directory
+    custom_incar_params = get_incar_params()
     for subdir, dirs, files in os.walk(root_dir):
         for file in files:
             if file.endswith(".vasp"):  # Check if file ends with .vasp

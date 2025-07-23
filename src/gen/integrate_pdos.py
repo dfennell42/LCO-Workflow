@@ -4,6 +4,9 @@ Author: Dorothea Fennell - dfennell1@bnl.gov
 Changelog: 
     5-5-25: Created, comments added.
     5-9-25: Changed integration section based on Blake's script
+    7-8-25: Changed script to pull selected data for M1, M2, and M3, adjusting indexes based on number of Li. Also added function to sort data 
+            by index.
+    7-23-25: Changed script to automatically add aluminum to csv of metal data with tot_e, spin, and hd/p = 0 and os = 3.
 NOTE: While this script uses 'integrate' to describe what's occuring, this is not technically an integration. The script takes
       the sum of the pdos from the lower limit of integration to positive infinity, divides each value in the integration window by this
       sum, then multiplies it by 5 to account for all 5 d orbitals. This is due to the need to normalize the occupied and unoccupied states
@@ -12,7 +15,7 @@ NOTE: While this script uses 'integrate' to describe what's occuring, this is no
 #import modules
 import os
 import numpy as np
-
+from pymatgen.core.periodic_table import Element
 #define functions so program can operate recursively
 def get_dirs(base_dir):
     '''Runs through all directories in base directory and returns list of pdos directories.'''
@@ -27,23 +30,16 @@ def get_dirs(base_dir):
 def get_files(pdos_dir):
     '''Gets files of all atoms from pdos directory'''
     m_filelist = []
-    al_filelist = []
-    o_filelist = []
     for file in os.listdir(pdos_dir):
         if file.endswith('_total.dat'):
             filepath = os.path.join(pdos_dir,file)
-            if file.startswith('O'):
-                o_filelist.append(filepath)
-            elif file.startswith('Al'):
-                al_filelist.append(filepath)
-            elif file.startswith('Li'):
-                pass
-            else:
+            atom = file.split('_')[0]
+            atom = atom.strip('0123456789')
+            ele = Element(atom)
+            if ele.Z > 20:
                 m_filelist.append(filepath)
     m_filelist.sort()
-    al_filelist.sort()
-    o_filelist.sort()
-    return m_filelist, al_filelist, o_filelist
+    return m_filelist
 
 def int_pdos(data,up_idx,down_idx,lower,upper, diff=True):
     """Integrates PDOS in specified windows."""
@@ -75,11 +71,26 @@ def int_pdos(data,up_idx,down_idx,lower,upper, diff=True):
         tota = tot_e
         return tota
     
+def get_os(ele,e_tot):
+    """Gets oxidation state of metal."""
+    valence = ele.valence[1]
+    oxs = valence - e_tot
+    return oxs
+
 def int_d_states(filelist):
     """Integrates the d states of the metal atoms for the total number of electrons and d/p hybridization. """
     #create data lists
     m_data = []
     for file in filelist:
+        #determine atom
+        filename = os.path.basename(file)
+        atom = filename.split('_')
+        index = ''
+        for char in atom:
+            if char.isdigit():
+                index +=f'{char}'
+        ele = atom.strip('0123456789')
+        ele = Element(ele)
         #the atom_total.dat files have to be unpacked because they're made with np.savetext
         data = np.genfromtxt(file,skip_header=1,unpack=True)
         
@@ -89,13 +100,10 @@ def int_d_states(filelist):
         #integrate from -8 to -2 to get d/p hybridization
         tot_win = int_pdos(data,5,6,-8,0,diff=False)
         hdp = tot_win - e_tot
-        #determine atom
-        filename = os.path.basename(file)
-        atom = filename.split('_')
-        atom = atom[0]
-        
+        #get os
+        ox = get_os(ele,e_tot)
         #append data to list
-        m_data.append(f'\n{atom},{e_tot},{spin},{hdp}')
+        m_data.append(f'\n{ele},{index},{e_tot},{ox},{spin},{hdp}')
     return m_data
 
 def print_data(pdos_dir,data,fname,header):
@@ -115,25 +123,26 @@ def integrate_all_pdos(base_dir):
         print('No PDOS directories found. Exiting...')
         return
     
-    selected_data = []
     for pdos_dir in pdos_dirs:
         #get filelists
-        m_filelist, al_filelist, o_filelist = get_files(pdos_dir)
+        m_filelist, o_filelist, li_filelist = get_files(pdos_dir)
         #integrate d states
         m_data = int_d_states(m_filelist)
-        for x in m_data:
-            atom = x.split(',')[0]
-            if atom.endswith(('21','23','25')):
-                x = x.strip('\n')
-                pdir = pdos_dir.split('/')
-                for p in pdir:
-                    if p.startswith('Modification_'):
-                        mod_name = p
-                selected_data.append(f'\n{mod_name},{x}')
+        
         #print data to csv
-        mod_header = 'Atom,e_tot,spin,H d/p'
+        mod_header = 'Element,Atom index,e_tot,OS,spin,H d/p'
+        m_data.sort(key=sort_by_index)
         print_data(pdos_dir,m_data,'integrated-pdos',mod_header)
-    selected_header = 'Modification dir,Atom,e_tot,spin,H d/p'
-    print_data(base_dir,selected_data,'selected-int-pdos',selected_header)
 
-    
+def sort_by_index(data):
+    '''For sorting the lists of data by the atom index rather than by element'''
+    data_list = data.split(',')
+    if len(data_list) == 6:
+        index = int(data_list[1])
+        return index
+    elif len(data_list) == 7:
+        index = int(data_list[2])
+        dirname = data_list[0].strip('\n')
+        dir_num = dirname.split('_')[1]
+        num = int(dir_num)
+        return (index, num)
