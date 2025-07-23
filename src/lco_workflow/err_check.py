@@ -75,7 +75,7 @@ def submit_calcs(file):
         shutil.copy(fullpath, dirname)
     
     vasppath = os.path.join(dirname,'vasp.sh')
-    print(f'Submitting calculation in f{dirname}...')
+    print(f'Submitting calculation in {dirname}...')
     sp.run(['sbatch',f'{vasppath}'], check=True)
     
 def err_fix(base_dir,submit=True):
@@ -107,10 +107,13 @@ def err_fix(base_dir,submit=True):
         for err in err_msgs:
             if err in fixable:
                 if err =='pricelv':
+                    print(f'Error: {err} in {dirname}.')
                     fix_sym(file)
                 elif err =='zbrent':
+                    print(f'Error: {err} in {dirname}.')
                     continue_calc(file)
                 elif err == 'fexcf':
+                    print(f'Error: {err} in {dirname}.')
                     continue_calc(file)
                 elif err =='timeout':
                     print(f'Error: Calculation in {dirname} timed out.')
