@@ -6,6 +6,7 @@ Changelog:
     5-9-25: Changed integration section based on Blake's script
     7-8-25: Changed script to pull selected data for M1, M2, and M3, adjusting indexes based on number of Li. Also added function to sort data 
             by index.
+    7-23-25: Changed script to automatically add aluminum to csv of metal data with tot_e, spin, and hd/p = 0 and os = 3.
 NOTE: While this script uses 'integrate' to describe what's occuring, this is not technically an integration. The script takes
       the sum of the pdos from the lower limit of integration to positive infinity, divides each value in the integration window by this
       sum, then multiplies it by 5 to account for all 5 d orbitals. This is due to the need to normalize the occupied and unoccupied states
@@ -29,7 +30,6 @@ def get_dirs(base_dir):
 def get_files(pdos_dir):
     '''Gets files of all atoms from pdos directory'''
     m_filelist = []
-    al_filelist = []
     o_filelist = []
     li_filelist = []
     for file in os.listdir(pdos_dir):
@@ -38,16 +38,15 @@ def get_files(pdos_dir):
             if file.startswith('O'):
                 o_filelist.append(filepath)
             elif file.startswith('Al'):
-                al_filelist.append(filepath)
+                m_filelist.append(filepath)
             elif file.startswith('Li'):
                 li_filelist.append(filepath)
             else:
                 m_filelist.append(filepath)
     m_filelist.sort()
-    al_filelist.sort()
     o_filelist.sort()
     li_filelist.sort()
-    return m_filelist, al_filelist, o_filelist, li_filelist
+    return m_filelist, o_filelist, li_filelist
 
 def int_pdos(data,up_idx,down_idx,lower,upper, diff=True):
     """Integrates PDOS in specified windows."""
@@ -94,24 +93,28 @@ def int_d_states(filelist):
     #create data lists
     m_data = []
     for file in filelist:
-        #the atom_total.dat files have to be unpacked because they're made with np.savetext
-        data = np.genfromtxt(file,skip_header=1,unpack=True)
-        
-        #integrate from -2 to 0 to get total # of electrons and net spin
-        e_tot, spin = int_pdos(data,5,6,-2,0)
-        
-        #integrate from -8 to -2 to get d/p hybridization
-        tot_win = int_pdos(data,5,6,-8,0,diff=False)
-        hdp = tot_win - e_tot
         #determine atom
         filename = os.path.basename(file)
         atom = filename.split('_')
         atom = atom[0]
-        ox = get_os(atom,e_tot)
-        #append data to list
         ele = atom[:2]
         index = atom[2:]
-        m_data.append(f'\n{ele},{index},{e_tot},{ox},{spin},{hdp}')
+        if ele == 'Al':
+            m_data.append(f'\n{ele},{index},0,3,0,0')
+        else:
+            #the atom_total.dat files have to be unpacked because they're made with np.savetext
+            data = np.genfromtxt(file,skip_header=1,unpack=True)
+            
+            #integrate from -2 to 0 to get total # of electrons and net spin
+            e_tot, spin = int_pdos(data,5,6,-2,0)
+            
+            #integrate from -8 to -2 to get d/p hybridization
+            tot_win = int_pdos(data,5,6,-8,0,diff=False)
+            hdp = tot_win - e_tot
+            #get os
+            ox = get_os(atom,e_tot)
+            #append data to list
+            m_data.append(f'\n{ele},{index},{e_tot},{ox},{spin},{hdp}')
     return m_data
 
 def print_data(pdos_dir,data,fname,header):
@@ -134,7 +137,7 @@ def integrate_all_pdos(base_dir):
     selected_data = []
     for pdos_dir in pdos_dirs:
         #get filelists
-        m_filelist, al_filelist, o_filelist, li_filelist = get_files(pdos_dir)
+        m_filelist, o_filelist, li_filelist = get_files(pdos_dir)
         #integrate d states
         m_data = int_d_states(m_filelist)
         #determine index numbers for m1, m2 & m3
