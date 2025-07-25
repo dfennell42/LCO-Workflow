@@ -33,6 +33,7 @@ def time_chk(output_file):
     '''Checks if calculations timed out.'''
     dirname = os.path.dirname(output_file)
     msg = 'DUE TO TIME LIMIT'
+    err_msg = 'Exited with exit code'
     slurm_files=[]
     #create list of all slurm outputs
     for file in os.listdir(dirname):
@@ -45,15 +46,26 @@ def time_chk(output_file):
     with open(latest_file,'r') as sfile:
         text = sfile.read()
         if text.find(msg) != -1:
-            return True
+            timeout = True
         else:
-            return False
-    
+            timeout = False
+        #check for other errors
+        if text.find(err_msg) != -1:
+            slurm_err = True
+        else:
+            slurm_err = False
+    return timeout, slurm_err
+
 def continue_calc(file):
     """Copies CONTCAR to POSCAR to continue calculation."""
     dirname = os.path.dirname(file)
     if os.path.exists(f'{dirname}/CONTCAR'):
-        shutil.copy(os.path.join(dirname,'CONTCAR'),os.path.join(dirname,'POSCAR'))
+        with open(f'{dirname}/CONTCAR','r') as c:
+            clines = c.readlines()
+            if clines == True:
+                shutil.copy(os.path.join(dirname,'CONTCAR'),os.path.join(dirname,'POSCAR'))
+            else:
+                print(f'CONTCAR in {dirname} empty. Skipping copying...')
     else:
         print(f'CONTCAR not found in {dirname}.')
         
@@ -74,9 +86,11 @@ def submit_calcs(file):
         fullpath = os.path.join(filedir, 'vasp.sh')
         shutil.copy(fullpath, dirname)
     
-    vasppath = os.path.join(dirname,'vasp.sh')
     print(f'Submitting calculation in {dirname}...')
-    sp.run(['sbatch',f'{vasppath}'], check=True)
+    wd = os.getcwd()
+    os.chdir(dirname)
+    sp.run(['sbatch','vasp.sh'], check=True)
+    os.chdir(wd)
     
 def err_fix(base_dir,submit=True):
     """ Fixes errors if possible or prints error if not."""
@@ -84,16 +98,19 @@ def err_fix(base_dir,submit=True):
     output_files = find_files(base_dir)
     err_files = []
     timeout_msg = {'errors':['timeout'],'actions':None}
+    slurm_msg = {'errors':['slurm_error'],'actions':None}
     for file in output_files:
         handler = VaspErrorHandler(file)
         err_chk = handler.check(os.path.dirname(file))
-        t_chk = time_chk(file)
+        t_chk,slurm_chk = time_chk(file)
         if err_chk == True:
             msg = handler.correct(os.path.dirname(file))
             del_backups(file)
             err_files.append((file,msg))
         if t_chk == True:
             err_files.append((file,timeout_msg))
+        if slurm_chk == True:
+            err_files.append((file,slurm_msg))
     
     if not err_files:
         print('No errors found. All calculations complete.')
@@ -103,7 +120,7 @@ def err_fix(base_dir,submit=True):
     for file,msg in err_files:
         dirname = os.path.dirname(file)
         err_msgs = msg.get('errors')
-        fixable =['pricelv','zbrent','fexcf','timeout']
+        fixable =['pricelv','zbrent','fexcf','timeout','slurm_error']
         for err in err_msgs:
             if err in fixable:
                 if err =='pricelv':
@@ -118,12 +135,14 @@ def err_fix(base_dir,submit=True):
                 elif err =='timeout':
                     print(f'Error: Calculation in {dirname} timed out.')
                     continue_calc(file)
+                elif err == 'slurm_error':
+                    print(f'Error: Slurm output file in {dirname} shows calculation exited with error code. Check output file for more info.')
             else:
                 print(f'Error: {err} for calculation in {dirname}. Must be fixed by hand.')
         if submit == True:
             submit_calcs(file)
     if submit != True:
-        print('Errors fixed, but calculations not submitted.')
+        print('Errors fixed if possible, but calculations not submitted.')
 #run in terminal
 #if __name__ == "__main__":
    # base_dir = os.getcwd()
