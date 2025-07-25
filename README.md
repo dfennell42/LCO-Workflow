@@ -1,6 +1,6 @@
 ## LCO Modifications Workflow CLI
 #### Author: Dorothea Fennell (dfennell1@bnl.gov)
-**Version**: 0.5.2
+**Version**: 0.5.3
 
 A command line interface (CLI) tool for the LCO Modifications Workflow built by Jennifer Bjorklund and Dorothea Fennell.
 
