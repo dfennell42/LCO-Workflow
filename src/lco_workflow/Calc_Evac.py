@@ -28,7 +28,7 @@ def read_file(r_dir, file):
     '''Reads given file in directory and returns list of lines'''
     F = open(os.path.join(r_dir,file),'r')
     lines = F.readlines()
-    F.close
+    F.close()
     return lines
 
 def get_pair_numbers(vac_dir):

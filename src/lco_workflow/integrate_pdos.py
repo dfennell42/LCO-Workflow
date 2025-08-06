@@ -7,6 +7,7 @@ Changelog:
     7-8-25: Changed script to pull selected data for M1, M2, and M3, adjusting indexes based on number of Li. Also added function to sort data 
             by index.
     7-23-25: Changed script to automatically add aluminum to csv of metal data with tot_e, spin, and hd/p = 0 and os = 3.
+    8-6-25: Changed script to integrate Al & O p states with Al from -2 to 0 and O from -8 to 0.
 NOTE: While this script uses 'integrate' to describe what's occuring, this is not technically an integration. The script takes
       the sum of the pdos from the lower limit of integration to positive infinity, divides each value in the integration window by this
       sum, then multiplies it by 5 to account for all 5 d orbitals. This is due to the need to normalize the occupied and unoccupied states
@@ -15,7 +16,7 @@ NOTE: While this script uses 'integrate' to describe what's occuring, this is no
 #import modules
 import os
 import numpy as np
-
+from pymatgen.core.periodic_table import Element
 #define functions so program can operate recursively
 def get_dirs(base_dir):
     '''Runs through all directories in base directory and returns list of pdos directories.'''
@@ -46,9 +47,10 @@ def get_files(pdos_dir):
     m_filelist.sort()
     o_filelist.sort()
     li_filelist.sort()
-    return m_filelist, o_filelist, li_filelist
 
-def int_pdos(data,up_idx,down_idx,lower,upper, diff=True):
+    return m_filelist, o_filelist,li_filelist
+
+def int_pdos(data,up_idx,down_idx,lower,upper, orbs,diff=True):
     """Integrates PDOS in specified windows."""
     #slice arrays
     energy = data[:,0]
@@ -68,9 +70,9 @@ def int_pdos(data,up_idx,down_idx,lower,upper, diff=True):
             
     for x in range(len(energy)):
         if energy[x] > lower and energy[x] < upper:
-            up_e += up[x]/up_sum * 5
-            down_e += down[x]/down_sum * 5
-            tot_e += up[x]/up_sum * 5 + down[x]/down_sum * 5
+            up_e += up[x]/up_sum * orbs
+            down_e += down[x]/down_sum * orbs
+            tot_e += up[x]/up_sum * orbs + down[x]/down_sum * orbs
     if diff == True:
         diff = np.abs(up_e-down_e)
         return tot_e, diff
@@ -78,14 +80,12 @@ def int_pdos(data,up_idx,down_idx,lower,upper, diff=True):
         tota = tot_e
         return tota
     
-def get_os(atom,e_tot):
+def get_os(ele,e_tot):
     """Gets oxidation state of metal."""
-    valence = {'Mn':7, 'Fe':8, 'Co':9, 'Ni':10}
-    element=atom[:2]
-    if element in valence.keys():
-        oxs = valence[f'{element}'] - e_tot
-    else:
-        oxs = 0
+    valence = ele.valence[1]
+    if ele.block != 's':
+        valence += 2
+    oxs = valence - e_tot
     return oxs
 
 def int_d_states(filelist):
@@ -95,26 +95,49 @@ def int_d_states(filelist):
     for file in filelist:
         #determine atom
         filename = os.path.basename(file)
-        atom = filename.split('_')
-        atom = atom[0]
-        ele = atom[:2]
-        index = atom[2:]
-        if ele == 'Al':
-            m_data.append(f'\n{ele},{index},0,3,0,0')
-        else:
-            #the atom_total.dat files have to be unpacked because they're made with np.savetext
-            data = np.genfromtxt(file,skip_header=1,unpack=True)
-            
-            #integrate from -2 to 0 to get total # of electrons and net spin
-            e_tot, spin = int_pdos(data,5,6,-2,0)
-            
-            #integrate from -8 to -2 to get d/p hybridization
-            tot_win = int_pdos(data,5,6,-8,0,diff=False)
+        atom = filename.split('_')[0]
+        index = ''
+        for char in atom:
+            if char.isdigit():
+                index +=f'{char}'
+        ele = atom.strip('0123456789')
+        ele = Element(ele)
+        if ele.block =='s':
+            orbs = 1
+            up_idx = 1
+            down_idx = 2
+        elif ele.block == 'p':
+            orbs = 3
+            up_idx = 3
+            down_idx = 4
+            e_lower = -8
+            if ele.symbol == 'Al':
+                e_lower = -2
+        elif ele.block == 'd':
+            orbs = 5
+            up_idx = 5
+            down_idx = 6
+            e_lower = -2
+        elif ele.block == 'f':
+            orbs = 7
+            up_idx = 7
+            down_idx = 8
+        #the atom_total.dat files have to be unpacked because they're made with np.savetext
+        data = np.genfromtxt(file,skip_header=1,unpack=True)
+        
+        #integrate from -2 to 0 to get total # of electrons and net spin
+        e_tot, spin = int_pdos(data,up_idx,down_idx,e_lower,0,orbs)
+        
+        #integrate from -8 to -2 to get d/p hybridization
+        if ele.block == 'd':
+            tot_win = int_pdos(data,up_idx,down_idx,-8,0,orbs,diff=False)
             hdp = tot_win - e_tot
-            #get os
-            ox = get_os(atom,e_tot)
-            #append data to list
-            m_data.append(f'\n{ele},{index},{e_tot},{ox},{spin},{hdp}')
+        else:
+            hdp = 0
+        #get os
+        ox = get_os(ele,e_tot)
+        #append data to list
+        m_data.append(f'\n{ele},{index},{e_tot},{ox},{spin},{hdp},{ele.block}')
     return m_data
 
 def print_data(pdos_dir,data,fname,header):
@@ -145,31 +168,40 @@ def integrate_all_pdos(base_dir):
         m1 = str(21 - li_rem)
         m2 = str(23 - li_rem)
         m3 = str(25 - li_rem)
+        o_num = str(43 - li_rem)
+        #get file for oxygen
+        o_files = []
+        for file in o_filelist:
+            filename = os.path.basename(file)
+            if filename.startswith(f'O{o_num}_'):
+                o_files.append(file)
+        o_data = int_d_states(o_files)
         #get selected data
+        m_data.extend(o_data)
         for x in m_data:
             x = x.strip('\n')
             atom_index = x.split(',')[1]
-            if atom_index in [m1,m2,m3]:
+            if atom_index in [m1,m2,m3,o_num]:
                 pdir = pdos_dir.split('/')
                 for p in pdir:
                     if p.startswith('Modification_'):
                         mod_name = p
                 selected_data.append(f'\n{mod_name},{x}')
         #print data to csv
-        mod_header = 'Element,Atom index,e_tot,OS,spin,H d/p'
+        mod_header = 'Element,Atom index,e_tot,OS,spin,H d/p,Orbital'
         m_data.sort(key=sort_by_index)
         print_data(pdos_dir,m_data,'integrated-pdos',mod_header)
-    selected_header = 'Modification dir,Element,Atom index,e_tot,OS,spin,H d/p'
+    selected_header = 'Modification dir,Element,Atom index,e_tot,OS,spin,H d/p,Orbital'
     selected_data.sort(key=sort_by_index)
     print_data(base_dir,selected_data,'selected-int-pdos',selected_header)
 
 def sort_by_index(data):
     '''For sorting the lists of data by the atom index rather than by element'''
     data_list = data.split(',')
-    if len(data_list) == 6:
+    if len(data_list) == 7:
         index = int(data_list[1])
         return index
-    elif len(data_list) == 7:
+    elif len(data_list) == 8:
         index = int(data_list[2])
         dirname = data_list[0].strip('\n')
         dir_num = dirname.split('_')[1]

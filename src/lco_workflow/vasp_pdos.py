@@ -4,6 +4,7 @@ Author: Dorothea Fennell
 Modified from Blake's vasp_pdos.py script
 Changelog: 
     4-30-25: Created, comments added. Broke original script up into functions so it can be applied recursively. 
+    8-6-25: Modified fermi_energy to split accordingly
 '''
 #import modules
 import numpy as np
@@ -19,7 +20,10 @@ def fermi_energy(pdos_dir):
     for l in open(f'{pdos_dir}/OUTCAR',"r").readlines():
         if "Fermi energy:" in l:
             line=l
-    fermi=float(line.split()[3].strip(';'))
+    if line.startswith('BZINTS'):
+        fermi = float(line.split()[3].strip(';'))
+    else:
+        fermi=float(line.split()[2])
     return fermi
 
 def read_files(pdos_dir):

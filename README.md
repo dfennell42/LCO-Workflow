@@ -1,6 +1,6 @@
 ## LCO Modifications Workflow CLI
 #### Author: Dorothea Fennell (dfennell1@bnl.gov)
-**Version**: 0.5.3
+**Version**: 0.7.0
 
 A command line interface (CLI) tool for the LCO Modifications Workflow built by Jennifer Bjorklund and Dorothea Fennell.
 
@@ -29,3 +29,7 @@ A command line interface (CLI) tool for the LCO Modifications Workflow built by 
 *submit*: Submits vasp calculations. Takes argument for which type of calculations to submit: *'struc'* for pristine or vacancy structure calculations, or *'pdos'* for PDOS calculations. Default is *'struc'*. Equivalent to bash scripts **submitall-vasp.sh** and **submitpdos-vasp.sh**.
 
 *check*: Checks calculations for errors. If error is PRICELV, ZBRENT, FEXCF, or a timeout, script will perform the appropriate fix and resubmit the calculations.
+
+*collect*: Collects all CONTCAR files recursively from head directory and copies them into /hpcgpfs01/scratch/CTCMO-2025/Structures/.
+
+*update*: Updates workflow with most recent version from /hpcgpfs01/scratch/dfennell/WF-Files/.
