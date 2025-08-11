@@ -20,7 +20,7 @@ def fermi_energy(pdos_dir):
     for l in open(f'{pdos_dir}/OUTCAR',"r").readlines():
         if "Fermi energy:" in l:
             line=l
-    if line.startswith('BZINTS'):
+    if line.startswith(' BZINTS'):
         fermi = float(line.split()[3].strip(';'))
     else:
         fermi=float(line.split()[2])

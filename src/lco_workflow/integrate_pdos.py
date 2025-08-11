@@ -101,43 +101,47 @@ def int_d_states(filelist):
             if char.isdigit():
                 index +=f'{char}'
         ele = atom.strip('0123456789')
-        ele = Element(ele)
-        if ele.block =='s':
-            orbs = 1
-            up_idx = 1
-            down_idx = 2
-        elif ele.block == 'p':
-            orbs = 3
-            up_idx = 3
-            down_idx = 4
-            e_lower = -8
-            if ele.symbol == 'Al':
-                e_lower = -2
-        elif ele.block == 'd':
-            orbs = 5
-            up_idx = 5
-            down_idx = 6
-            e_lower = -2
-        elif ele.block == 'f':
-            orbs = 7
-            up_idx = 7
-            down_idx = 8
-        #the atom_total.dat files have to be unpacked because they're made with np.savetext
-        data = np.genfromtxt(file,skip_header=1,unpack=True)
-        
-        #integrate from -2 to 0 to get total # of electrons and net spin
-        e_tot, spin = int_pdos(data,up_idx,down_idx,e_lower,0,orbs)
-        
-        #integrate from -8 to -2 to get d/p hybridization
-        if ele.block == 'd':
-            tot_win = int_pdos(data,up_idx,down_idx,-8,0,orbs,diff=False)
-            hdp = tot_win - e_tot
+        try:
+            ele = Element(ele)
+        except:
+            pass
         else:
-            hdp = 0
-        #get os
-        ox = get_os(ele,e_tot)
-        #append data to list
-        m_data.append(f'\n{ele},{index},{e_tot},{ox},{spin},{hdp},{ele.block}')
+            if ele.block =='s':
+                orbs = 1
+                up_idx = 1
+                down_idx = 2
+            elif ele.block == 'p':
+                orbs = 3
+                up_idx = 3
+                down_idx = 4
+                e_lower = -8
+                if ele.symbol == 'Al':
+                    e_lower = -2
+            elif ele.block == 'd':
+                orbs = 5
+                up_idx = 5
+                down_idx = 6
+                e_lower = -2
+            elif ele.block == 'f':
+                orbs = 7
+                up_idx = 7
+                down_idx = 8
+            #the atom_total.dat files have to be unpacked because they're made with np.savetext
+            data = np.genfromtxt(file,skip_header=1,unpack=True)
+            
+            #integrate from -2 to 0 to get total # of electrons and net spin
+            e_tot, spin = int_pdos(data,up_idx,down_idx,e_lower,0,orbs)
+            
+            #integrate from -8 to -2 to get d/p hybridization
+            if ele.block == 'd':
+                tot_win = int_pdos(data,up_idx,down_idx,-8,0,orbs,diff=False)
+                hdp = tot_win - e_tot
+            else:
+                hdp = 0
+            #get os
+            ox = get_os(ele,e_tot)
+            #append data to list
+            m_data.append(f'\n{ele},{index},{e_tot},{ox},{spin},{hdp},{ele.block}')
     return m_data
 
 def print_data(pdos_dir,data,fname,header):
@@ -168,12 +172,16 @@ def integrate_all_pdos(base_dir):
         m1 = str(21 - li_rem)
         m2 = str(23 - li_rem)
         m3 = str(25 - li_rem)
-        o_num = str(43 - li_rem)
+        o1 = str(41 - li_rem)
+        o2 = str(43 - li_rem)
+        o3 = str(45 - li_rem)
         #get file for oxygen
         o_files = []
         for file in o_filelist:
             filename = os.path.basename(file)
-            if filename.startswith(f'O{o_num}_'):
+            f = filename.split('_')[0]
+            o_num = f.strip('O')
+            if o_num in [o1,o2,o3]:
                 o_files.append(file)
         o_data = int_d_states(o_files)
         #get selected data
@@ -181,7 +189,7 @@ def integrate_all_pdos(base_dir):
         for x in m_data:
             x = x.strip('\n')
             atom_index = x.split(',')[1]
-            if atom_index in [m1,m2,m3,o_num]:
+            if atom_index in [m1,m2,m3,o1,o2,o3]:
                 pdir = pdos_dir.split('/')
                 for p in pdir:
                     if p.startswith('Modification_'):

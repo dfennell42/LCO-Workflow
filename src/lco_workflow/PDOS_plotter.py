@@ -45,7 +45,7 @@ def make_plots(option=None, plot_choice=None, indices=None, titles=None):
         fig.update_layout(colorway = colorlist)
     #update layout and axes
     fig.update_layout(template='plotly_white',title =dict(x=0.5, xanchor='center', font_size=20), font_family = 'Nimbus Roman',margin=dict(b=20))
-    fig.update_xaxes(title = 'DOS', showline = True, zeroline = True, zerolinewidth=1, zerolinecolor='#262626',ticks='outside', linewidth=2, linecolor = '#262626',range=[-6,6])
+    fig.update_xaxes(title = 'DOS', showline = True, zeroline = True, zerolinewidth=1, zerolinecolor='#262626', showticklabels=False,linewidth=2, linecolor = '#262626',range=[-6,6])
     fig.update_yaxes(title = 'Energy (eV)', showline = True, zeroline = True, zerolinewidth=1, zerolinecolor='#262626',linewidth=2, linecolor = '#262626', ticks ='outside', range=[-10,6])
     fig.update_traces(line_width=3)
 
@@ -60,7 +60,7 @@ def fermi_energy(base_dir):
     for l in open(f'{base_dir}/OUTCAR',"r").readlines():
         if "Fermi energy:" in l:
             line=l
-    if line.startswith('BZINTS'):
+    if line.startswith(' BZINTS'):
         fermi = float(line.split()[3].strip(';'))
     else:
         fermi=float(line.split()[2])
