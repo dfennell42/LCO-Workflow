@@ -40,34 +40,6 @@ def modify_co_pairs(atoms,co_pairs):
         write(output_filename, modified_atoms, format="vasp")
         print(f"Modified POSCAR saved in directory {directory_name} as {output_filename}.")
 
-# Function to remove specified pairs
-def remove_specified_pairs(atoms,pair_list, element_name):
-    print(f"Available pairs for {element_name}:")
-    for idx, pair in enumerate(pair_list):
-        print(f"{idx}: {pair}")
-
-    pair_indices_to_remove = input(f"Enter the indices of {element_name} pairs to remove (comma-separated): ")
-    pair_indices_to_remove = [int(idx) for idx in pair_indices_to_remove.split(',') if idx.isdigit()]
-
-    # Create a copy of atoms and mark specified pairs for removal
-    modified_atoms = copy.deepcopy(atoms)
-    for pair_index in pair_indices_to_remove:
-        if pair_index < len(pair_list):
-            index1, index2 = pair_list[pair_index]
-            modified_atoms[index1].symbol = "X"  # Placeholder symbol
-            modified_atoms[index2].symbol = "X"  # Placeholder symbol
-
-    # Remove atoms marked with placeholder symbol "X"
-    modified_atoms = modified_atoms[[atom.symbol != "X" for atom in modified_atoms]]
-    
-    # Make new directory for removal
-    directory_name = f"{element_name}_Pairs_Removed"
-    os.makedirs(directory_name, exist_ok=True)
-    
-    output_filename = os.path.join(directory_name, f"POSCAR_removed_{element_name}.vasp")
-    write(output_filename, modified_atoms, format="vasp")
-    print(f"POSCAR with specified {element_name} pairs removed saved in directory {directory_name} as {output_filename}.")
-
 def modify_lco():
     '''Modifies structures based of user input. '''
     pkgdir = sys.modules['lco_workflow'].__path__[0]
@@ -105,18 +77,5 @@ def modify_lco():
     save_pairs_to_file(o_pairs, "o_pairs.txt")
     print("Pairs saved to li_pairs.txt, co_pairs.txt, and o_pairs.txt.")
     
-    # Optional Interactive prompt
-    print("What would you like to do?")
-    print("1: Modify Co pairs based on ModsCo.txt")
-    print("2: Remove specified Li pairs")
-    print("3: Remove specified O pairs")
-    choice = input("Enter the number of your choice: ")
-
-    if choice == "1":
-        modify_co_pairs(atoms,co_pairs)
-    elif choice == "2":
-        remove_specified_pairs(atoms,li_pairs, "Li")
-    elif choice == "3":
-        remove_specified_pairs(atoms,o_pairs, "O")
-    else:
-        print("Invalid choice. Exiting.")
+    modify_co_pairs(atoms,co_pairs)
+    print("Modifications created.")
