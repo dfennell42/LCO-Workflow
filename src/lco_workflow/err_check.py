@@ -153,6 +153,7 @@ def err_fix(base_dir,submit=True):
                     print(f'Error: Slurm output file in {dirname} shows calculation exited with error code. Check output file for more info.')
             else:
                 print(f'Error: {err} for calculation in {dirname}. Must be fixed by hand.')
+                pass
         if submit == True:
             submit_calcs(file)
     if submit != True:
