@@ -43,8 +43,8 @@ def create_pdos(input_dir,base_directory):
     
     #Copy PDOS_INCAR.txt file - has to be separate as it is not in Modification_# dir
     #copy from package to base dir
-    pkgdir = sys.modules['lco_workflow'].__path__[0]
-    fullpath = os.path.join(pkgdir, 'PDOS_INCAR.txt')
+    userdir = os.path.expanduser('~/wf-user-files')
+    fullpath = os.path.join(userdir, 'PDOS_INCAR.txt')
     shutil.copy(fullpath, base_directory)
     #copy from base dir to mod dir
     for file in os.listdir(base_directory):

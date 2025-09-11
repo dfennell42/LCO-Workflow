@@ -35,11 +35,14 @@ def time_chk(output_file):
     msg = 'DUE TO TIME LIMIT'
     err_msg = 'Exited with exit code'
     canc_msg = 'CANCELLED'
+    finished = 'Voluntary context'
     slurm_files=[]
     #create list of all slurm outputs
     for file in os.listdir(dirname):
         if file.startswith('slurm-'):
             slurm_files.append(os.path.join(dirname,file))
+        if file == 'OUTCAR':
+            outcar = os.path.join(dirname,file)
     #sort files in ascending order
     slurm_files.sort()
     #open most recent file
@@ -59,7 +62,13 @@ def time_chk(output_file):
             cancelled = True
         else:
             cancelled = False
-    return timeout, slurm_err, cancelled
+    with open(outcar,'r') as ofile:
+        text = ofile.read()
+        if text.find(finished) != -1:
+            running = False
+        else:
+            running = True
+    return timeout, slurm_err, cancelled, running
 
 def continue_calc(file):
     """Copies CONTCAR to POSCAR to continue calculation."""
@@ -115,13 +124,16 @@ def err_fix(base_dir,submit=True):
             del_backups(file)
             err_files.append((file,msg))
         elif err_chk != True:
-            t_chk,slurm_chk,canc_chk = time_chk(file)
+            t_chk,slurm_chk,canc_chk,run_chk = time_chk(file)
             if t_chk == True:
                 err_files.append((file,timeout_msg))
             elif slurm_chk == True:
                 err_files.append((file,slurm_msg))
             elif canc_chk == True:
                 err_files.append((file,canc_msg))
+            elif run_chk == True:
+                dirname = os.path.dirname(file)
+                print(f'Calculation in {dirname} still running.')
     
     if not err_files:
         print('No errors found. All calculations complete.')

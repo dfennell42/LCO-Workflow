@@ -8,6 +8,7 @@ Changelog:
     4-28-25: Added some minor changes to file names
     4-30-25: Added section so script functions recursively.
     8-6-25: Added gaussian smearing to the plotting. Fixed a couple other minor issues.
+    9-10-25: Removed gaussian smearing now that gaussian method is used to compute PDOS.
 """
 #import modules
 import numpy as np
@@ -86,18 +87,16 @@ def save_plot(fig, filename, base_dir,w=500, h=600, s=1.25, show_image=True):
 def option1(f,fig,plot_choice, r=1, c =1):
     #this one needs to be unpacked because it's saved by numpy.savetxt rather than .write()
     data = np.genfromtxt(f, skip_header=1, unpack = True)
-    #add gaussian smearing to plot
-    smeared_data = gaussian_filter(data, sigma=1.5, axes=0)
     #generate name for plot & file
     filename = str(f).split('/')
     name=str(filename[-1]).split('.')
     name=str(name[0]).split("_")
     #data
-    energy = smeared_data[:,0]
+    energy = data[:,0]
     orbs = ['s up','s down','p up','p down','d up', 'd down']
     for i, orb in enumerate(orbs,1):
         if not(i==1 or i==2):
-            fig.add_scatter(x=smeared_data[:,i], y=energy, mode='lines',fill='tozerox', name = f'{orb}',row = r, col = c)
+            fig.add_scatter(x=data[:,i], y=energy, mode='lines',fill='tozerox', name = f'{orb}',row = r, col = c)
         
         if (str(name[0]).startswith("O") or str(name[0]).startswith('Al')):
             fig.update_traces(visible='legendonly',selector=dict(name='d up'), row = r,col=c)
@@ -117,23 +116,21 @@ def option1(f,fig,plot_choice, r=1, c =1):
 
 def option2(f,fig,fermi,plot_choice,r=1,c=1):
     data = np.genfromtxt(f, skip_header=1)
-    #add gaussian smearing to plot
-    smeared_data = gaussian_filter(data, sigma=1.5, axes=0)
     #generate name for plot & file
     filename = str(f).split('/')
     name=str(filename[-1]).split('.')
     name=str(name[0]).split("_")
     #data
-    energy = smeared_data[:,0]-fermi
+    energy = data[:,0]-fermi
     orbs =['s up','s down','p(y) up', 'p(y) down','p(z) up', 'p(z) down', 'p(x) up','p(x) down', 'd(xy) up', 'd(xy) down', 'd(yz) up', 'd(yz) down','d(z2) up', 'd(z2) down', 'd(xz) up', 'd(xz) down', 'd(x2-y2) up','d(x2-y2) down']
     for i, orb in enumerate(orbs,1):
         if not(i==1 or i==2):
             if i%2 == 0:
                 #multiply the down values by -1 to show pdos by spin
-                x = smeared_data[:,i]*-1
+                x = data[:,i]*-1
                 fig.add_scatter(x=x, y=energy, mode='lines', name = f'{orb}',row = r, col = c)
             else:
-                fig.add_scatter(x=smeared_data[:,i], y=energy, mode='lines', name = f'{orb}',row = r, col = c)
+                fig.add_scatter(x=data[:,i], y=energy, mode='lines', name = f'{orb}',row = r, col = c)
 
         #update axes if necessary
         #if str(name[0]).startswith('Al'):
@@ -254,6 +251,8 @@ def plot_pdos(base_dir, show_img=True):
             fig.add_scatter(x=up, y = energy, mode = 'lines', fill = 'tozerox')
             fig.add_scatter(x=down, y = energy, mode = 'lines', fill = 'tozerox')
             fig.update_layout(title_text = 'Total Density of States', showlegend=False)
+            fig.update_xaxes(range=None,showticklabels=True,ticks='outside')
+            fig.update_yaxes(range=None)
             #save image
             save_plot(fig,'TotalDos.png',pdos_dir)
         else:
