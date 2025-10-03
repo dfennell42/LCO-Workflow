@@ -74,7 +74,8 @@ def process_vasp_inputs(base_directory):
     for root, dirs, files in os.walk(base_directory):
         if input_choice == '1':
             if root.endswith("VASP_inputs") and "CONTCAR" in files:
-                input_dirs.append(root)
+                if 'CLEAN' not in root:
+                    input_dirs.append(root)
         elif input_choice == '2':
             if root.endswith("_Removed"):
                 if vac_choice == '1':

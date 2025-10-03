@@ -102,9 +102,9 @@ def process_pdos_dirs(base_dir):
     """Finds all PDOS directories and processes POSCAR & DOSCAR into a file for each individual atom."""
     pdos_dirs=[]
     for root, dirs, files in os.walk(base_dir):
-        if root.endswith("PDOS") and "DOSCAR" in files:
+        if root.endswith("/PDOS") and "DOSCAR" in files:
             pdos_dirs.append(root)
-        elif root.endswith("PDOS") and "DOSCAR" not in files:
+        elif root.endswith("/PDOS") and "DOSCAR" not in files:
             print("PDOS calculations haven't been run yet.")
             
     if not pdos_dirs:

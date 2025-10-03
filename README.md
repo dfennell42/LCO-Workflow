@@ -1,35 +1,222 @@
-## LCO Modifications Workflow CLI
-#### Author: Dorothea Fennell (dfennell1@bnl.gov)
-**Version**: 0.8.0
+# `LCO-Workflow`
 
-A command line interface (CLI) tool for the LCO Modifications Workflow built by Jennifer Bjorklund and Dorothea Fennell.
+**Usage**:
 
-#### Commands:
-***Commands must be preceded by wf.***
+```console
+$ LCO-Workflow [OPTIONS] COMMAND [ARGS]...
+```
 
-*init*: Sets up directory ~/wf-user-files for user files (POSCAR, SpinPairs.txt, PDOS_INCAR.txt, vasp.sh) and other settings. These are the versions of the files the workflow will pull from, so if you modify a file, it’ll pull from this directory.
+**Options**:
 
-*modify*: Modifies pristine POSCAR, creates Modification_# directories, and sets up pristine surface calculations. Equivalent to bash script **run-all-LCOmod-workflow1-5.sh**. 
-***NOTE:*** You must create the ModsCo.txt file yourself. 
+* `-v, --version`
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
 
-*removepairs*: Creates Li or O vacancies in pristine structures and sets up vacancy calculations. Equivalent to bash script **run-removal-from-pristine.sh**.
+**Commands**:
 
-*getE*: Processes data from pristine/vacancy calculations and generates two csv files: E_pristine.csv and E_vac.csv. Equivalent to bash script **process-data.sh**.
+* `init`: Initializes workflow settings.
+* `modify`: Modifies LCO structure based on user input.
+* `removepairs`: Removes Li/O pairs from structures
+* `gete`: Gets pristine E and E vac
+* `pdos`: sets up PDOS calculations
+* `parse`: Parses PDOS data into individual files and...
+* `integrate`: Integrates the PDOS files.
+* `plot`: Plots PDOS
+* `extract`: Gets ML descriptors from PDOS and...
+* `submit`: Submits vasp calculations.
+* `check`: Checks vasp.out for errors and fixes and...
+* `collect`: Collects all CONTCAR files in Structures...
+* `update`: Checks workflow version and updates if...
 
-*pdos*: Sets up PDOS calculations. Equivalent to bash script **run-PDOS.sh**.
+## `LCO-Workflow init`
 
-*parse*: Parses the data from the PDOS calculations to generate .dat files for each atom and integrates metal d-states. Equivalent to bash script **process-PDOS.sh**.
+Initializes workflow settings.
 
-*integrate*: Integrates the metal d-states without parsing the files first. ***Note:*** Files must be parsed before integration. The parse command parses **AND** integrates, so this command is only if integration needs to be performed on already parsed files.
+**Usage**:
 
-*plot*: Runs PDOS-plotter.py, which plots PDOS based on user input. 
+```console
+$ LCO-Workflow init [OPTIONS]
+```
 
-*extract*:Extracts machine learning descriptors, including but not limited to formation energy, optimized bond lengths, d band centers. See Workflow Guide document for list of all descriptors.
+**Options**:
 
-*submit*: Submits vasp calculations. Takes argument for which type of calculations to submit: *'struc'* for pristine or vacancy structure calculations, or *'pdos'* for PDOS calculations. Default is *'struc'*. Equivalent to bash scripts **submitall-vasp.sh** and **submitpdos-vasp.sh**.
+* `--help`: Show this message and exit.
 
-*check*: Checks calculations for errors. If error is PRICELV, ZBRENT, FEXCF, or a timeout, script will perform the appropriate fix and resubmit the calculations.
+## `LCO-Workflow modify`
 
-*collect*: Collects all CONTCAR files recursively from head directory and copies them into /hpcgpfs01/scratch/CTCMO-2025/Structures/.
+Modifies LCO structure based on user input. Needs ModsCo.txt
 
-*update*: Updates workflow with most recent version from /hpcgpfs01/scratch/dfennell/WF-Files/.
+**Usage**:
+
+```console
+$ LCO-Workflow modify [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `LCO-Workflow removepairs`
+
+Removes Li/O pairs from structures
+
+**Usage**:
+
+```console
+$ LCO-Workflow removepairs [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `LCO-Workflow gete`
+
+Gets pristine E and E vac
+
+**Usage**:
+
+```console
+$ LCO-Workflow gete [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `LCO-Workflow pdos`
+
+sets up PDOS calculations
+
+**Usage**:
+
+```console
+$ LCO-Workflow pdos [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `LCO-Workflow parse`
+
+Parses PDOS data into individual files and integrates
+
+**Usage**:
+
+```console
+$ LCO-Workflow parse [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `LCO-Workflow integrate`
+
+Integrates the PDOS files. Note: Files must be parsed before integration. The parse command parses AND integrates, so this command is only if integration needs to be performed on already parsed files.
+
+**Usage**:
+
+```console
+$ LCO-Workflow integrate [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `LCO-Workflow plot`
+
+Plots PDOS
+
+**Usage**:
+
+```console
+$ LCO-Workflow plot [OPTIONS]
+```
+
+**Options**:
+
+* `-n, --no-show-image`: Do not display plot in X11 window after running command.
+* `--help`: Show this message and exit.
+
+## `LCO-Workflow extract`
+
+Gets ML descriptors from PDOS and optimization calculations.
+
+**Usage**:
+
+```console
+$ LCO-Workflow extract [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `LCO-Workflow submit`
+
+Submits vasp calculations.
+
+**Usage**:
+
+```console
+$ LCO-Workflow submit [OPTIONS] [CALC]
+```
+
+**Arguments**:
+
+* `[CALC]`: The type of calculation to submit. Options: struc: Pristine or vacancy surface calculations. pdos: PDOS calculations  [default: struc]
+
+**Options**:
+
+* `-v, --vac`: Run only vacancy calculations. Does not work with calc = pdos
+* `--help`: Show this message and exit.
+
+## `LCO-Workflow check`
+
+Checks vasp.out for errors and fixes and resubmits calculations if possible.
+
+**Usage**:
+
+```console
+$ LCO-Workflow check [OPTIONS]
+```
+
+**Options**:
+
+* `-n, --no-submit`: Use -n or --no-submit to run check without autosubmitting calculations
+* `--help`: Show this message and exit.
+
+## `LCO-Workflow collect`
+
+Collects all CONTCAR files in Structures directory.
+
+**Usage**:
+
+```console
+$ LCO-Workflow collect [OPTIONS]
+```
+
+**Options**:
+
+* `-f, --force`: Forces file copying, replacing existing files.
+* `-p, --parent TEXT`: Force set the name of the parent structure
+* `-g, --group TEXT`: Force set the name of the group of calculations
+* `--help`: Show this message and exit.
+
+## `LCO-Workflow update`
+
+Checks workflow version and updates if necessary.
+
+**Usage**:
+
+```console
+$ LCO-Workflow update [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.

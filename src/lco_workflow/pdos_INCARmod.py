@@ -46,7 +46,7 @@ def process_pdos_dirs(base_directory):
     """Finds all PDOS directories and edits their INCAR files."""
     for root, dirs, files in os.walk(base_directory):
         if "INCAR" in files:
-            if root.endswith("PDOS"):
+            if root.endswith("PDOS") and 'CLEAN' not in root:
                 pdos_incar_file = find_incar_file(root)
                 if pdos_incar_file:
                     modify_incar(os.path.join(root, "INCAR"), pdos_incar_file)

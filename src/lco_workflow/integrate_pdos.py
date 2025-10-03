@@ -15,9 +15,9 @@ def get_dirs(base_dir):
     '''Runs through all directories in base directory and returns list of pdos directories.'''
     pdos_dirs=[]
     for root, dirs, files in os.walk(base_dir):
-        if root.endswith("PDOS") and "TotalDos.dat" in files:
+        if root.endswith("s/PDOS") and "TotalDos.dat" in files:
             pdos_dirs.append(root)
-        elif root.endswith("PDOS") and "TotalDos.dat" not in files:
+        elif root.endswith("s/PDOS") and "TotalDos.dat" not in files:
             print("PDOS data hasn't been parsed yet.")
     return pdos_dirs
 
@@ -43,7 +43,7 @@ def get_files(pdos_dir):
 
     return m_filelist, o_filelist,li_filelist
 
-def int_pdos(data,up_idx,down_idx,lower,upper,block='d',diff=True):
+def int_pdos(data,up_idx,down_idx,lower,upper,block,diff=True):
     """Integrates PDOS in specified windows."""
     #slice arrays
     energy = data[:,0]
@@ -75,13 +75,14 @@ def int_pdos(data,up_idx,down_idx,lower,upper,block='d',diff=True):
     if block == 'p':
         s_up = data[:,1]
         s_down = data[:,2]
-        s_uls = np.split(s_up,[a,b])
-        s_dls = np.split(s_down,[a,b])
-        su_win = s_uls[1]
-        sd_win = s_dls[1]
-        sup_e = simpson(su_win,x=e_win)
+        s_uls = np.split(s_up,[b])
+        s_dls = np.split(s_down,[b])
+        se_win = np.concat((els[0],els[1]),axis=None)
+        su_win = s_uls[0]
+        sd_win = s_dls[0]
+        sup_e = simpson(su_win,x=se_win)
         up_e += sup_e
-        sdown_e = simpson(sd_win,x=e_win)
+        sdown_e = simpson(sd_win,x=se_win)
         down_e += sdown_e
         tot_e = up_e + np.abs(down_e)
     #get spin
@@ -125,10 +126,12 @@ def int_d_states(filelist):
                 up_idx = 3
                 down_idx = 4
                 e_lower = -8
+                block = 'p'
             elif ele.block == 'd':
                 up_idx = 5
                 down_idx = 6
                 e_lower = -6
+                block = 'd'
             elif ele.block == 'f':
                 up_idx = 7
                 down_idx = 8
@@ -136,11 +139,11 @@ def int_d_states(filelist):
             data = np.genfromtxt(file,skip_header=1,unpack=True)
             
             #integrate from lower bound to 0 to get total # of electrons and net spin
-            e_tot, spin = int_pdos(data,up_idx,down_idx,e_lower,0,block=ele.block)
+            e_tot, spin = int_pdos(data,up_idx,down_idx,e_lower,0,block)
             
             #integrate from -8 to -6 to get d/p hybridization - for d-block metals only
             if ele.block == 'd':
-                tot_win = int_pdos(data,up_idx,down_idx,-8,0,diff=False)
+                tot_win = int_pdos(data,up_idx,down_idx,-8,0,block,diff=False)
                 hdp = tot_win - e_tot
             else:
                 hdp = 0
@@ -181,22 +184,10 @@ def integrate_all_pdos(base_dir):
         m1 = str(21 - li_rem)
         m2 = str(23 - li_rem)
         m3 = str(25 - li_rem)
-        o43 = str(43 - li_rem)
-        #get file for oxygen
-        o_files = []
-        for file in o_filelist:
-            filename = os.path.basename(file)
-            f = filename.split('_')[0]
-            o_num = f.strip('O')
-            if o_num == o43:
-                o_files.append(file)
-        o_data = int_d_states(o_files)
-        #get selected data
-        m_data.extend(o_data)
         for x in m_data:
             x = x.strip('\n')
             atom_index = x.split(',')[1]
-            if atom_index in [m1,m2,m3,o43]:
+            if atom_index in [m1,m2,m3]:
                 pdir = pdos_dir.split('/')
                 for p in pdir:
                     if p.startswith('Modification_'):

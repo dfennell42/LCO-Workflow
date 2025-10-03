@@ -37,8 +37,6 @@ from .get_descriptors import extract_desc
 from .collect_contcar import copy_all_files
 #update command
 from .wf_update import check_vrsn
-#bader charges
-from .get_bader_chg import bader_chg
 #create app
 app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
 
@@ -159,7 +157,3 @@ def update():
     '''Checks workflow version and updates if necessary.'''
     check_vrsn()
     
-@app.command()
-def bader():
-    '''Extracts bader charges and prints to csv.'''
-    bader_chg(os.getcwd())
