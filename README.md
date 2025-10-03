@@ -1,9 +1,9 @@
-# `LCO-Workflow`
+# `wf`
 
 **Usage**:
 
 ```console
-$ LCO-Workflow [OPTIONS] COMMAND [ARGS]...
+$ wf [OPTIONS] COMMAND [ARGS]...
 ```
 
 **Options**:
@@ -29,112 +29,112 @@ $ LCO-Workflow [OPTIONS] COMMAND [ARGS]...
 * `collect`: Collects all CONTCAR files in Structures...
 * `update`: Checks workflow version and updates if...
 
-## `LCO-Workflow init`
+## `wf init`
 
 Initializes workflow settings.
 
 **Usage**:
 
 ```console
-$ LCO-Workflow init [OPTIONS]
+$ wf init [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `LCO-Workflow modify`
+## `wf modify`
 
 Modifies LCO structure based on user input. Needs ModsCo.txt
 
 **Usage**:
 
 ```console
-$ LCO-Workflow modify [OPTIONS]
+$ wf modify [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `LCO-Workflow removepairs`
+## `wf removepairs`
 
 Removes Li/O pairs from structures
 
 **Usage**:
 
 ```console
-$ LCO-Workflow removepairs [OPTIONS]
+$ wf removepairs [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `LCO-Workflow gete`
+## `wf gete`
 
 Gets pristine E and E vac
 
 **Usage**:
 
 ```console
-$ LCO-Workflow gete [OPTIONS]
+$ wf gete [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `LCO-Workflow pdos`
+## `wf pdos`
 
 sets up PDOS calculations
 
 **Usage**:
 
 ```console
-$ LCO-Workflow pdos [OPTIONS]
+$ wf pdos [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `LCO-Workflow parse`
+## `wf parse`
 
 Parses PDOS data into individual files and integrates
 
 **Usage**:
 
 ```console
-$ LCO-Workflow parse [OPTIONS]
+$ wf parse [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `LCO-Workflow integrate`
+## `wf integrate`
 
 Integrates the PDOS files. Note: Files must be parsed before integration. The parse command parses AND integrates, so this command is only if integration needs to be performed on already parsed files.
 
 **Usage**:
 
 ```console
-$ LCO-Workflow integrate [OPTIONS]
+$ wf integrate [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `LCO-Workflow plot`
+## `wf plot`
 
 Plots PDOS
 
 **Usage**:
 
 ```console
-$ LCO-Workflow plot [OPTIONS]
+$ wf plot [OPTIONS]
 ```
 
 **Options**:
@@ -142,28 +142,28 @@ $ LCO-Workflow plot [OPTIONS]
 * `-n, --no-show-image`: Do not display plot in X11 window after running command.
 * `--help`: Show this message and exit.
 
-## `LCO-Workflow extract`
+## `wf extract`
 
 Gets ML descriptors from PDOS and optimization calculations.
 
 **Usage**:
 
 ```console
-$ LCO-Workflow extract [OPTIONS]
+$ wf extract [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `LCO-Workflow submit`
+## `wf submit`
 
 Submits vasp calculations.
 
 **Usage**:
 
 ```console
-$ LCO-Workflow submit [OPTIONS] [CALC]
+$ wf submit [OPTIONS] [CALC]
 ```
 
 **Arguments**:
@@ -175,14 +175,14 @@ $ LCO-Workflow submit [OPTIONS] [CALC]
 * `-v, --vac`: Run only vacancy calculations. Does not work with calc = pdos
 * `--help`: Show this message and exit.
 
-## `LCO-Workflow check`
+## `wf check`
 
 Checks vasp.out for errors and fixes and resubmits calculations if possible.
 
 **Usage**:
 
 ```console
-$ LCO-Workflow check [OPTIONS]
+$ wf check [OPTIONS]
 ```
 
 **Options**:
@@ -190,14 +190,14 @@ $ LCO-Workflow check [OPTIONS]
 * `-n, --no-submit`: Use -n or --no-submit to run check without autosubmitting calculations
 * `--help`: Show this message and exit.
 
-## `LCO-Workflow collect`
+## `wf collect`
 
 Collects all CONTCAR files in Structures directory.
 
 **Usage**:
 
 ```console
-$ LCO-Workflow collect [OPTIONS]
+$ wf collect [OPTIONS]
 ```
 
 **Options**:
@@ -207,14 +207,14 @@ $ LCO-Workflow collect [OPTIONS]
 * `-g, --group TEXT`: Force set the name of the group of calculations
 * `--help`: Show this message and exit.
 
-## `LCO-Workflow update`
+## `wf update`
 
 Checks workflow version and updates if necessary.
 
 **Usage**:
 
 ```console
-$ LCO-Workflow update [OPTIONS]
+$ wf update [OPTIONS]
 ```
 
 **Options**:
