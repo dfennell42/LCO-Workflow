@@ -1,5 +1,32 @@
-# `wf`
+# LCO Modification Workflow CLI
+#### Author: Dorothea Fennell (dfennell1@bnl.gov, dfennell37@gmail.com)
+**Version**: 0.8.0
 
+---
+### Important Note:
+This version, as the original, was designed to work on a specific computing cluster. As such, there are specific paths/commands that will not work if you upload this to a different cluster. There is another, generalized version of this workflow that does not have that issue. It can be found here: [Delafossite-Workflow](https://github.com/dfennell42/Delafossite-Workflow/)
+
+---
+
+A command line interface tool designed to simplify running VASP calculations for LCO. This workflow can:
+- Modify composition
+- Create vacancies
+- Submit calculations
+- Calculate vacancy energy
+- Set up PDOS calculations
+- Parse, integrate and plot PDOS
+- Check calculations for errors, timeouts, and cancellations, fixes minor errors, and resubmits calculations
+- Extract descriptors for machine learning
+- Collect all relaxed structure files in one directory.
+
+The workflow uses Atomic Simulation Environment (ASE) and Pymatgen to create/modify structures and generate VASP input files. As of right now, the workflow only supports SLURM for job submission. Any commands that submit calculations ***will not work*** with other workload managers. 
+
+## Installation
+If you would like to use the workflow as a regular installation, install the .whl file from the release. 
+
+If you would like to use the workflow as an editable installation, install the .tar.gz file from the release. The workflow uses Poetry as a package builder and dependency manager. To use the workflow as an editable installation, refer to the [Poetry Docs](https://python-poetry.org/docs/). 
+
+## Workflow Commands (`wf`):
 **Usage**:
 
 ```console
@@ -9,8 +36,6 @@ $ wf [OPTIONS] COMMAND [ARGS]...
 **Options**:
 
 * `-v, --version`
-* `--install-completion`: Install completion for the current shell.
-* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
 * `--help`: Show this message and exit.
 
 **Commands**:
