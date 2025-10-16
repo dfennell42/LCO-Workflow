@@ -1,6 +1,6 @@
 [project]
 name = "lco-workflow"
-version = "0.8.0"
+version = "0.8.1"
 description = "A CLI tool for the LCO Modifications Workflow"
 authors = [
     {name = "Dorothea Fennell",email = "dfennell1@bnl.gov"}
