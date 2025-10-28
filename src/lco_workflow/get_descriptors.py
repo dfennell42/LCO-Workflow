@@ -118,13 +118,15 @@ def get_band_center(vasprun,m_idxs,o_idx,cbm):
                 bc = dos.get_band_center(band=OrbitalType(1),sites=site_list)
                 bc_occ = dos.get_band_center(band=OrbitalType(1),sites=site_list,erange=(float('-inf'),0))
                 bc_unocc = dos.get_band_center(band=OrbitalType(1),sites=site_list,erange=(0,float('inf')))
-                band_centers.update({f'{i}_bc_full':bc,f'{i}_bc_occ':bc_occ,f'{i}_bc_unocc':bc_unocc})
+                band_width = dos.get_band_width(band=OrbitalType(1),sites=site_list)
+                band_centers.update({f'{i}_bc_full':bc,f'{i}_bc_occ':bc_occ,f'{i}_bc_unocc':bc_unocc,f'{i}_band_width':band_width})
             else:
                 site_list=[site]
                 bc = dos.get_band_center(sites=site_list)
                 bc_occ = dos.get_band_center(sites=site_list,erange=(float('-inf'),0))
                 bc_unocc = dos.get_band_center(sites=site_list,erange=(0,float('inf')))
-                band_centers.update({f'{i}_bc_full':bc,f'{i}_bc_occ':bc_occ,f'{i}_bc_unocc':bc_unocc})
+                band_width = dos.get_band_width(sites=site_list)
+                band_centers.update({f'{i}_bc_full':bc,f'{i}_bc_occ':bc_occ,f'{i}_bc_unocc':bc_unocc,f'{i}_band_width':band_width})
         if i == o_idx:
             site_list=[site]
             bc = dos.get_band_center(band=OrbitalType(1),sites=site_list)
