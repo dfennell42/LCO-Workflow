@@ -132,8 +132,17 @@ def get_band_center(vasprun,m_idxs,o_idx,cbm):
             bc = dos.get_band_center(band=OrbitalType(1),sites=site_list)
             bc_occ = dos.get_band_center(band=OrbitalType(1),sites=site_list,erange=(float('-inf'),0))
             bc_unocc = dos.get_band_center(band=OrbitalType(1),sites=site_list,erange=(0,float('inf')))
+            band_width = dos.get_band_width(band=OrbitalType(1),sites=site_list)
             bc_cbm_diff = cbm - bc
-            band_centers.update({'O(p)_bc_full':bc,'O(p)_bc_occ':bc_occ,'O(p)_bc_unocc':bc_unocc, 'O(p)_cbm_diff':bc_cbm_diff})
+            band_centers.update({'O(p)_bc_full':bc,'O(p)_bc_occ':bc_occ,'O(p)_bc_unocc':bc_unocc, 'O(p)_cbm_diff':bc_cbm_diff,'O(p)_band_width':band_width})
+    #adding in covalent mixing term
+    for num, i in enumerate(m_idxs,1):
+        widths = band_centers[f'{i}_band_width']*band_centers['O(p)_band_width']
+        width_term = np.sqrt(widths)
+        bc_diff = band_centers[f'{i}_bc_full']-band_centers['O(p)_bc_full']
+        bc_term = np.abs(bc_diff)
+        mix_term = width_term / bc_term
+        band_centers.update({f'O_M{num}_mix':mix_term})
     bc_ser = pd.Series(band_centers)
     return bc_ser
 
