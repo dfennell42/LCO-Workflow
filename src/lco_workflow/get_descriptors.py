@@ -119,22 +119,25 @@ def get_band_center(vasprun,m_idxs,o_idx,cbm):
                 bc_occ = dos.get_band_center(band=OrbitalType(1),sites=site_list,erange=(float('-inf'),0))
                 bc_unocc = dos.get_band_center(band=OrbitalType(1),sites=site_list,erange=(0,float('inf')))
                 band_width = dos.get_band_width(band=OrbitalType(1),sites=site_list)
-                band_centers.update({f'{i}_bc_full':bc,f'{i}_bc_occ':bc_occ,f'{i}_bc_unocc':bc_unocc,f'{i}_band_width':band_width})
+                occ_bw = dos.get_band_width(band=OrbitalType(1),sites=site_list, erange=(float('-inf'),0))
+                band_centers.update({f'{i}_bc_full':bc,f'{i}_bc_occ':bc_occ,f'{i}_bc_unocc':bc_unocc,f'{i}_band_width':band_width, f'{i}_occ_bw':occ_bw})
             else:
                 site_list=[site]
                 bc = dos.get_band_center(sites=site_list)
                 bc_occ = dos.get_band_center(sites=site_list,erange=(float('-inf'),0))
                 bc_unocc = dos.get_band_center(sites=site_list,erange=(0,float('inf')))
                 band_width = dos.get_band_width(sites=site_list)
-                band_centers.update({f'{i}_bc_full':bc,f'{i}_bc_occ':bc_occ,f'{i}_bc_unocc':bc_unocc,f'{i}_band_width':band_width})
+                occ_bw = dos.get_band_width(sites=site_list, erange=(float('-inf'),0))
+                band_centers.update({f'{i}_bc_full':bc,f'{i}_bc_occ':bc_occ,f'{i}_bc_unocc':bc_unocc,f'{i}_band_width':band_width,f'{i}_occ_bw':occ_bw})
         if i == o_idx:
             site_list=[site]
             bc = dos.get_band_center(band=OrbitalType(1),sites=site_list)
             bc_occ = dos.get_band_center(band=OrbitalType(1),sites=site_list,erange=(float('-inf'),0))
             bc_unocc = dos.get_band_center(band=OrbitalType(1),sites=site_list,erange=(0,float('inf')))
             band_width = dos.get_band_width(band=OrbitalType(1),sites=site_list)
+            occ_bw = dos.get_band_width(band=OrbitalType(1),sites=site_list, erange=(float('-inf'),0))
             bc_cbm_diff = cbm - bc
-            band_centers.update({'O(p)_bc_full':bc,'O(p)_bc_occ':bc_occ,'O(p)_bc_unocc':bc_unocc, 'O(p)_cbm_diff':bc_cbm_diff,'O(p)_band_width':band_width})
+            band_centers.update({'O(p)_bc_full':bc,'O(p)_bc_occ':bc_occ,'O(p)_bc_unocc':bc_unocc, 'O(p)_cbm_diff':bc_cbm_diff,'O(p)_band_width':band_width, 'O(p)_occ_bw':occ_bw})
     #adding in covalent mixing term
     for num, i in enumerate(m_idxs,1):
         widths = band_centers[f'{i}_band_width']*band_centers['O(p)_band_width']
