@@ -242,12 +242,12 @@ def plot_pdos(base_dir, show_img=True):
             #gettin data
             data = np.genfromtxt(file, skip_header=1)
             #add gaussian smearing to data
-            smeared_data = gaussian_filter(data, sigma=1.5, axes=0)
+            #smeared_data = gaussian_filter(data, sigma=1.5, axes=0)
             #defines x(dos) and y(energy) values
             #multiply the down values by -1 to show pdos by spin
-            energy = smeared_data[:,0]-fermi
-            up = smeared_data[:,1]
-            down = smeared_data[:,2]*-1
+            energy = [:,0]-fermi
+            up = [:,1]
+            down = [:,2]*-1
             fig.add_scatter(x=up, y = energy, mode = 'lines', fill = 'tozerox')
             fig.add_scatter(x=down, y = energy, mode = 'lines', fill = 'tozerox')
             fig.update_layout(title_text = 'Total Density of States', showlegend=False)
