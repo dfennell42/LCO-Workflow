@@ -245,9 +245,9 @@ def plot_pdos(base_dir, show_img=True):
             #smeared_data = gaussian_filter(data, sigma=1.5, axes=0)
             #defines x(dos) and y(energy) values
             #multiply the down values by -1 to show pdos by spin
-            energy = [:,0]-fermi
-            up = [:,1]
-            down = [:,2]*-1
+            energy = data[:,0]-fermi
+            up = data[:,1]
+            down = data[:,2]*-1
             fig.add_scatter(x=up, y = energy, mode = 'lines', fill = 'tozerox')
             fig.add_scatter(x=down, y = energy, mode = 'lines', fill = 'tozerox')
             fig.update_layout(title_text = 'Total Density of States', showlegend=False)
