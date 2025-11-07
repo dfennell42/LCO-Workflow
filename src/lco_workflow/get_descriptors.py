@@ -7,6 +7,7 @@ Changelog:
     7-14-25: Added funcs for t2g/e_g resolved dos and getting pdos data. Set most funcs to return pandas series and began extract.
     7-16-25: Finished extract function and finished script.
     8-20-25: Added function to extract ionization energy and polarizability. Added ability to get difference between O2p band center and conduction band minimum
+    11-7-25: Updating integration
 """
 #import modules
 from pymatgen.io.vasp import Vasprun
@@ -16,6 +17,7 @@ from ase.io import read
 from ase.formula import Formula
 import numpy as np
 import pandas as pd
+from scipy.integrate import simpson 
 #define functions
 def read_file(r_dir, file):
     '''Reads given file in directory and returns list of lines'''
@@ -195,26 +197,30 @@ def bond_lengths(atoms, o_idx, m_idxs):
     bl_ser = pd.Series(bond_lengths)
     return bl_ser
 
-def int_pdos(energy, up, down, num):
+def int_pdos(energy, up, down):
     """Integrates PDOS in specified windows."""
-    #set up variables for next section
-    up_e = 0.0
-    down_e = 0.0
-    tot_e = 0.0
-    up_sum = 0.0
-    down_sum = 0.0
+    #get bottom of integration window
+    for x in range(len(energy)):
+        if energy[x] >= -8:
+            a = x
+            break
+    #get top of integration window
+    for x in range(len(energy)):
+        if energy[x] > 0:
+            b = x
+            break
+    
+    #split arrays
+    els = np.split(energy,[a,b])
+    uls = np.split(up,[a,b])
+    dls = np.split(down,[a,b])
+    e_win = els[1]
+    u_win = uls[1]
+    d_win = dls[1]
     #integrate
-    for x in range(len(energy)):
-        if energy[x] > -2:
-            up_sum += up[x]
-            down_sum += down[x]
-            
-    for x in range(len(energy)):
-        if energy[x] > -2 and energy[x] < 0:
-            up_e += up[x]/up_sum * num
-            down_e += down[x]/down_sum * num
-            tot_e += up[x]/up_sum * num + down[x]/down_sum * num
-        
+    up_e = simpson(u_win,x=e_win)
+    down_e = simpson(d_win, x=e_win)
+    tot_e = up_e + np.abs(down_e)
     return tot_e
 
 def t2g_eg_dos(vasprun,m_idxs):
@@ -241,8 +247,8 @@ def t2g_eg_dos(vasprun,m_idxs):
                 t2g_data = t2g['densities']
                 eg_data = eg['densities']
                 eg_en = np.subtract(eg['energies'],eg['efermi'])
-                t2g_tot_e = int_pdos(t2g_en, t2g_data['1'], t2g_data['-1'],3)
-                eg_tot_e = int_pdos(eg_en,eg_data['1'],eg_data['-1'],2)
+                t2g_tot_e = int_pdos(t2g_en, t2g_data['1'], t2g_data['-1'])
+                eg_tot_e = int_pdos(eg_en,eg_data['1'],eg_data['-1'])
                 t2g_eg_dict.update({f'{i}_t2g':t2g_tot_e,f'{i}_eg':eg_tot_e})
     
     if len(t2g_eg_dict) < 6:
