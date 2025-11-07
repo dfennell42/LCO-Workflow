@@ -43,8 +43,8 @@ def create_pdos(input_dir,base_directory):
     
     #Copy PDOS_INCAR.txt file - has to be separate as it is not in Modification_# dir
     #copy from package to base dir
-    pkgdir = sys.modules['lco_workflow'].__path__[0]
-    fullpath = os.path.join(pkgdir, 'PDOS_INCAR.txt')
+    userdir = os.path.expanduser('~/wf-user-files')
+    fullpath = os.path.join(userdir, 'PDOS_INCAR.txt')
     shutil.copy(fullpath, base_directory)
     #copy from base dir to mod dir
     for file in os.listdir(base_directory):
@@ -74,7 +74,8 @@ def process_vasp_inputs(base_directory):
     for root, dirs, files in os.walk(base_directory):
         if input_choice == '1':
             if root.endswith("VASP_inputs") and "CONTCAR" in files:
-                input_dirs.append(root)
+                if 'CLEAN' not in root:
+                    input_dirs.append(root)
         elif input_choice == '2':
             if root.endswith("_Removed"):
                 if vac_choice == '1':

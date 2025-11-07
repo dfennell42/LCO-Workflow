@@ -1,30 +1,247 @@
-## LCO Modifications Workflow CLI
-#### Author: Dorothea Fennell (dfennell1@bnl.gov)
-**Version**: 0.4.0
+# LCO Modification Workflow CLI
+#### Author: Dorothea Fennell (dfennell1@bnl.gov, dfennell37@gmail.com)
+**Version**: 0.8.4
 
-A command line interface (CLI) tool for the LCO Modifications Workflow built by Jennifer Bjorklund and Dorothea Fennell.
+---
+### Important Note:
+This version, as the original, was designed to work on a specific computing cluster. As such, there are specific paths/commands that will not work if you upload this to a different cluster. There is another, generalized version of this workflow that does not have that issue. It can be found here: [Delafossite-Workflow](https://github.com/dfennell42/Delafossite-Workflow/)
 
-#### Commands:
-***Commands must be preceded by wf.***
+---
 
-*init*: Sets up directory ~/wf-user-files for user files (POSCAR, SpinPairs.txt, PDOS_INCAR.txt, vasp.sh) and other settings. These are the versions of the files the workflow will pull from, so if you modify a file, it’ll pull from this directory.
+A command line interface tool designed to simplify running VASP calculations for LCO. This workflow can:
+- Modify composition
+- Create vacancies
+- Submit calculations
+- Calculate vacancy energy
+- Set up PDOS calculations
+- Parse, integrate and plot PDOS
+- Check calculations for errors, timeouts, and cancellations, fixes minor errors, and resubmits calculations
+- Extract descriptors for machine learning
+- Collect all relaxed structure files in one directory.
 
-*modify*: Modifies pristine POSCAR, creates Modification_# directories, and sets up pristine surface calculations. Equivalent to bash script **run-all-LCOmod-workflow1-5.sh**. 
-***NOTE:*** You must create the ModsCo.txt file yourself. 
+The workflow uses Atomic Simulation Environment (ASE) and Pymatgen to create/modify structures and generate VASP input files. As of right now, the workflow only supports SLURM for job submission. Any commands that submit calculations ***will not work*** with other workload managers. 
 
-*removepairs*: Creates Li or O vacancies in pristine structures and sets up vacancy calculations. Equivalent to bash script **run-removal-from-pristine.sh**.
+## Installation
+If you would like to use the workflow as a regular installation, install the .whl file from the release. 
 
-*check*: Checks calculations for errors. If error is PRICELV, ZBRENT, FEXCF, or a timeout, script will perform the appropriate fix and resubmit the calculations.
+If you would like to use the workflow as an editable installation, install the .tar.gz file from the release. The workflow uses Poetry as a package builder and dependency manager. To use the workflow as an editable installation, refer to the [Poetry Docs](https://python-poetry.org/docs/). 
 
-*getE*: Processes data from pristine/vacancy calculations and generates two csv files: E_pristine.csv and E_vac.csv. Equivalent to bash script **process-data.sh**.
+## Workflow Commands (`wf`):
+**Usage**:
 
-*pdos*: Sets up PDOS calculations. Equivalent to bash script **run-PDOS.sh**.
+```console
+$ wf [OPTIONS] COMMAND [ARGS]...
+```
 
-*parse*: Parses the data from the PDOS calculations to generate .dat files for each atom and integrates metal d-states. Equivalent to bash script **process-PDOS.sh**.
+**Options**:
 
-*integrate*: Integrates the metal d-states without parsing the files first. ***Note:*** Files must be parsed before integration. The parse command parses **AND** integrates, so this command is only if integration needs to be performed on already parsed files.
+* `-v, --version`
+* `--help`: Show this message and exit.
 
-*plot*: Runs PDOS-plotter.py, which plots PDOS based on user input. 
+**Commands**:
 
-*submit*: Submits vasp calculations. Takes argument for which type of calculations to submit: *'struc'* for pristine or vacancy structure calculations, or *'pdos'* for PDOS calculations. Default is *'struc'*. Equivalent to bash scripts **submitall-vasp.sh** and **submitpdos-vasp.sh**.
+* `init`: Initializes workflow settings.
+* `modify`: Modifies LCO structure based on user input.
+* `removepairs`: Removes Li/O pairs from structures
+* `gete`: Gets pristine E and E vac
+* `pdos`: sets up PDOS calculations
+* `parse`: Parses PDOS data into individual files and...
+* `integrate`: Integrates the PDOS files.
+* `plot`: Plots PDOS
+* `extract`: Gets ML descriptors from PDOS and...
+* `submit`: Submits vasp calculations.
+* `check`: Checks vasp.out for errors and fixes and...
+* `collect`: Collects all CONTCAR files in Structures...
+* `update`: Checks workflow version and updates if...
 
+## `wf init`
+
+Initializes workflow settings.
+
+**Usage**:
+
+```console
+$ wf init [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `wf modify`
+
+Modifies LCO structure based on user input. Needs ModsCo.txt
+
+**Usage**:
+
+```console
+$ wf modify [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `wf removepairs`
+
+Removes Li/O pairs from structures
+
+**Usage**:
+
+```console
+$ wf removepairs [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `wf gete`
+
+Gets pristine E and E vac
+
+**Usage**:
+
+```console
+$ wf gete [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `wf pdos`
+
+sets up PDOS calculations
+
+**Usage**:
+
+```console
+$ wf pdos [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `wf parse`
+
+Parses PDOS data into individual files and integrates
+
+**Usage**:
+
+```console
+$ wf parse [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `wf integrate`
+
+Integrates the PDOS files. Note: Files must be parsed before integration. The parse command parses AND integrates, so this command is only if integration needs to be performed on already parsed files.
+
+**Usage**:
+
+```console
+$ wf integrate [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `wf plot`
+
+Plots PDOS
+
+**Usage**:
+
+```console
+$ wf plot [OPTIONS]
+```
+
+**Options**:
+
+* `-n, --no-show-image`: Do not display plot in X11 window after running command.
+* `--help`: Show this message and exit.
+
+## `wf extract`
+
+Gets ML descriptors from PDOS and optimization calculations.
+
+**Usage**:
+
+```console
+$ wf extract [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `wf submit`
+
+Submits vasp calculations.
+
+**Usage**:
+
+```console
+$ wf submit [OPTIONS] [CALC]
+```
+
+**Arguments**:
+
+* `[CALC]`: The type of calculation to submit. Options: struc: Pristine or vacancy surface calculations. pdos: PDOS calculations  [default: struc]
+
+**Options**:
+
+* `-v, --vac`: Run only vacancy calculations. Does not work with calc = pdos
+* `--help`: Show this message and exit.
+
+## `wf check`
+
+Checks vasp.out for errors and fixes and resubmits calculations if possible.
+
+**Usage**:
+
+```console
+$ wf check [OPTIONS]
+```
+
+**Options**:
+
+* `-n, --no-submit`: Use -n or --no-submit to run check without autosubmitting calculations
+* `--help`: Show this message and exit.
+
+## `wf collect`
+
+Collects all CONTCAR files in Structures directory.
+
+**Usage**:
+
+```console
+$ wf collect [OPTIONS]
+```
+
+**Options**:
+
+* `-f, --force`: Forces file copying, replacing existing files.
+* `-p, --parent TEXT`: Force set the name of the parent structure
+* `-g, --group TEXT`: Force set the name of the group of calculations
+* `--help`: Show this message and exit.
+
+## `wf update`
+
+Checks workflow version and updates if necessary.
+
+**Usage**:
+
+```console
+$ wf update [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.

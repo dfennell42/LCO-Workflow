@@ -3,7 +3,7 @@ Error checker
 Author: Dorothea Fennell
 Changelog:
     7-2-25: Created, comments added
-    7-7-25: Fixed time_chk so it only checks most recent slurm output. Fixed sbatch command. 
+    7-7-25: Fixed time_chk so it only checks most recent slurm output
 """
 #import modules
 import os
@@ -33,11 +33,16 @@ def time_chk(output_file):
     '''Checks if calculations timed out.'''
     dirname = os.path.dirname(output_file)
     msg = 'DUE TO TIME LIMIT'
+    err_msg = 'Exited with exit code'
+    canc_msg = 'CANCELLED'
+    finished = 'Voluntary context'
     slurm_files=[]
     #create list of all slurm outputs
     for file in os.listdir(dirname):
         if file.startswith('slurm-'):
             slurm_files.append(os.path.join(dirname,file))
+        if file == 'OUTCAR':
+            outcar = os.path.join(dirname,file)
     #sort files in ascending order
     slurm_files.sort()
     #open most recent file
@@ -45,15 +50,36 @@ def time_chk(output_file):
     with open(latest_file,'r') as sfile:
         text = sfile.read()
         if text.find(msg) != -1:
-            return True
+            timeout = True
         else:
-            return False
-    
+            timeout = False
+        #check for other errors
+        if text.find(err_msg) != -1:
+            slurm_err = True
+        else:
+            slurm_err = False
+        if text.find(canc_msg) != -1 and timeout == False:
+            cancelled = True
+        else:
+            cancelled = False
+    with open(outcar,'r') as ofile:
+        text = ofile.read()
+        if text.find(finished) != -1:
+            running = False
+        else:
+            running = True
+    return timeout, slurm_err, cancelled, running
+
 def continue_calc(file):
     """Copies CONTCAR to POSCAR to continue calculation."""
     dirname = os.path.dirname(file)
     if os.path.exists(f'{dirname}/CONTCAR'):
-        os.rename(f'{dirname}/CONTCAR',f'{dirname}/POSCAR')
+        with open(f'{dirname}/CONTCAR','r') as c:
+            clines = c.readlines()
+            if clines:
+                shutil.copy(os.path.join(dirname,'CONTCAR'),os.path.join(dirname,'POSCAR'))
+            elif not clines:
+                print(f'CONTCAR in {dirname} empty. Skipping copying...')
     else:
         print(f'CONTCAR not found in {dirname}.')
         
@@ -74,49 +100,76 @@ def submit_calcs(file):
         fullpath = os.path.join(filedir, 'vasp.sh')
         shutil.copy(fullpath, dirname)
     
-    vasppath = os.path.join(dirname,'vasp.sh')
-    print(f'Submitting calculation in f{dirname}...')
-    sp.run(['sbatch',f'{vasppath}'], check=True)
+    print(f'Submitting calculation in {dirname}...')
+    wd = os.getcwd()
+    os.chdir(dirname)
+    sp.run(['sbatch','vasp.sh'], check=True)
+    os.chdir(wd)
     
-def err_fix(base_dir):
+def err_fix(base_dir,submit=True):
     """ Fixes errors if possible or prints error if not."""
     #gets error files
     output_files = find_files(base_dir)
     err_files = []
     timeout_msg = {'errors':['timeout'],'actions':None}
+    slurm_msg = {'errors':['slurm_error'],'actions':None}
+    canc_msg = {'errors':['cancelled'],'actions':None}
+    subset = list(VaspErrorHandler.error_msgs.keys())
+    subset.remove('eddrmm')
     for file in output_files:
-        handler = VaspErrorHandler(file)
+        handler = VaspErrorHandler(file, errors_subset_to_catch=subset)
         err_chk = handler.check(os.path.dirname(file))
-        t_chk = time_chk(file)
         if err_chk == True:
             msg = handler.correct(os.path.dirname(file))
             del_backups(file)
             err_files.append((file,msg))
-        if t_chk == True:
-            err_files.append((file,timeout_msg))
+        elif err_chk != True:
+            t_chk,slurm_chk,canc_chk,run_chk = time_chk(file)
+            if t_chk == True:
+                err_files.append((file,timeout_msg))
+            elif slurm_chk == True:
+                err_files.append((file,slurm_msg))
+            elif canc_chk == True:
+                err_files.append((file,canc_msg))
+            elif run_chk == True:
+                dirname = os.path.dirname(file)
+                print(f'Calculation in {dirname} still running.')
     
     if not err_files:
         print('No errors found. All calculations complete.')
+        return
     
     #fix errors
     for file,msg in err_files:
         dirname = os.path.dirname(file)
         err_msgs = msg.get('errors')
-        fixable =['pricelv','zbrent','fexcf','timeout']
+        fixable =['pricelv','zbrent','fexcf','timeout','slurm_error','cancelled']
         for err in err_msgs:
             if err in fixable:
                 if err =='pricelv':
+                    print(f'Error: {err} in {dirname}.')
                     fix_sym(file)
                 elif err =='zbrent':
+                    print(f'Error: {err} in {dirname}.')
                     continue_calc(file)
                 elif err == 'fexcf':
+                    print(f'Error: {err} in {dirname}.')
                     continue_calc(file)
                 elif err =='timeout':
+                    print(f'Error: Calculation in {dirname} timed out.')
                     continue_calc(file)
-                submit_calcs(file)
+                elif err =='cancelled':
+                    print(f'Error: Calculation in {dirname} cancelled.')
+                    continue_calc(file)
+                elif err == 'slurm_error':
+                    print(f'Error: Slurm output file in {dirname} shows calculation exited with error code. Check output file for more info.')
             else:
                 print(f'Error: {err} for calculation in {dirname}. Must be fixed by hand.')
-        
+                pass
+        if submit == True:
+            submit_calcs(file)
+    if submit != True:
+        print('Errors fixed if possible, but calculations not submitted.')
 #run in terminal
 #if __name__ == "__main__":
    # base_dir = os.getcwd()
