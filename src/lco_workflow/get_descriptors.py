@@ -334,7 +334,32 @@ def get_ion_e_pol(vasprun,m_idxs):
             ion_pol_data.update({f'{i}_ion_e':ion_e,f'{i}_min_pol':min_pol,f'{i}_pol':val,f'{i}_max_pol':max_pol})
     ion_pol_ser = pd.Series(ion_pol_data)
     return ion_pol_ser
+
+def get_binary_evac(vasprun,m_idxs):
+    '''Gets O vacancy energy from binary metal oxide for each metal species in LCE'''
+    struc = vasprun.final_structure
+    all_sites = struc.sites
     
+    binary_dict={
+        'Al':6.91638435,
+        'Mn':3.28671184,
+        'Fe':3.778409415,
+        'Co':2.48314856,
+        'Ni':2.02617786
+        }
+    binary_evac_data = {}
+    sum_bin_evac = 0
+    for i,site in enumerate(all_sites):
+        if i in m_idxs:
+            if site.label in binary_dict.keys():
+                bin_evac = binary_dict[site.label]
+                sum_bin_evac += bin_evac
+                binary_evac_data.update({f'{i}_bin_evac':bin_evac})
+    avg_bin_evac = sum_bin_evac/3
+    binary_evac_data.update({'avg_bin_evac':avg_bin_evac})
+    bin_evac_ser = pd.Series(binary_evac_data)
+    return bin_evac_ser
+
 def extract_desc(base_dir):
     '''Extract descriptors.'''
     #get directories
@@ -397,10 +422,12 @@ def extract_desc(base_dir):
                 t2g_eg = t2g_eg_dos(pdos_vpr, m_idxs)
                 #get ionization e and polarizability
                 ion_pol_ser = get_ion_e_pol(opt_vpr, m_idxs)
+                #get evac from binary oxides
+                bin_evac_ser = get_binary_evac(opt_vpr, m_idxs)
                 #create pandas series with modification and single value returns
                 e_ser = pd.Series(data={'Modification':mod,'E_form':form_en,'E_fermi':fermi,'E_bg':bg_e,'VBM':vbm,'CBM':cbm})
                 #concatenate all series
-                mod_ser = pd.concat([e_ser,pdos_data,bl_ser,eln,bc_ser,t2g_eg,ion_pol_ser])
+                mod_ser = pd.concat([e_ser,pdos_data,bl_ser,eln,bc_ser,t2g_eg,ion_pol_ser,bin_evac_ser])
                 #append series to list
                 mod_data_list.append(mod_ser)
     

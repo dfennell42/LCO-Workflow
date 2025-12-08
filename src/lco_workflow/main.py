@@ -29,6 +29,7 @@ from .tot_int import get_all_data
 from .PDOS_plotter import plot_pdos
 #initialize
 from .intialize import init_settings
+from .df_init import init_settings as df_init
 #error check
 from .err_check import err_fix
 #descriptor extraction
