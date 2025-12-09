@@ -17,7 +17,7 @@ from pathlib import Path
 import sys
 import os
 from PIL import Image, ImageShow
-from scipy.ndimage import gaussian_filter
+
 #define functions
 def make_plots(option=None, plot_choice=None, indices=None, titles=None):
     '''Makes subplots based on user input'''
@@ -70,6 +70,7 @@ def fermi_energy(base_dir):
 def get_filelist(pdos_dir,indices, suffix):
     filelist =[]
     for i in indices:
+        i = i.strip()
         file = list(Path(f'{pdos_dir}').glob(f'*[a-zA-Z]{i}{suffix}'))
         if Path(file[0]).exists() == True:
             filelist.append(file[0])
@@ -151,7 +152,7 @@ def check_input(user_input):
 def plot_pdos(base_dir, show_img=True):
     print('\n If you would like to exit, type "exit" into any input prompt.')
     print('\nWould you like this to run recursively?')
-    print('\nEntire either "y" for all directories, or input the number(s) of the directories. If inputting a list, separate the numbers with a space.')
+    print('\nEntire either "y" for all directories, or input the number(s) of the directories (comma-separated).')
     rec = input()
     check_input(rec)
     print("\nWould you like to plot the PDOS of all structures, the pristine structures, or the vacancy structures?")
@@ -179,8 +180,9 @@ def plot_pdos(base_dir, show_img=True):
                 if root.endswith('_Removed/PDOS')and prev_dir.startswith('O'):
                     pdos_dirs.append(root)
     else:
-        dir_num = rec.split()
+        dir_num = rec.split(',')
         for num in dir_num:
+            num = num.strip()
             for root, dirs, files in os.walk(base_dir):
                 if f'Modification_{num}/' in root:
                     dirname = os.path.dirname(root)
@@ -199,7 +201,7 @@ def plot_pdos(base_dir, show_img=True):
                             pdos_dirs.append(root)
     
     print("\nPlease input the files you'd like to plot")
-    print("If plotting PDOS for single atoms, input atom index. If inputting multiple indices, separate them with a space.")
+    print("If plotting PDOS for single atoms, input atom index. Multiple indices should be comma-separated.")
     print("If plotting total DOS, input 'TotalDos'")
     choice = input()
     check_input(choice)
@@ -207,7 +209,7 @@ def plot_pdos(base_dir, show_img=True):
        #moved this to the for loop
        fname='TotalDos.dat'
     else:
-        indices = choice.split()
+        indices = choice.split(',')
         print("\nWould you like to plot the PDOS with the orbitals summed by type (all d summed, etc.) or with individual orbitals (dxy,dxz,etc.)?")
         print("1: Summed")
         print("2: Individual")
