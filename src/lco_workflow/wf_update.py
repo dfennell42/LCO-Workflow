@@ -44,4 +44,5 @@ def check_vrsn(suffix):
     elif current_vrsn != new_vrsn:
         destpath = os.path.expanduser('~/')
         sp.check_call(['gh','cp','dfennell/LCO-Workflow',f'dist/{latest_file}',f'{destpath}'])
-        sp.check_call(['pip','install',f'{latest_file}'])
+        if suffix == '.whl':
+            sp.check_call(['pip','install',f'{latest_file}'])
