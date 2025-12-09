@@ -22,8 +22,8 @@ def check_gh():
 def get_pkg(suffix):
     '''get files from repository.'''
     cp = sp.run(['gh','api','-H','accept:application/vnd.github.v3.raw','repos/dfennell42/LCO-Workflow/contents/dist/','--jq','.[].name'],capture_output=True)
-    out = str(cp.stdout).strip("b'")
-    filelist = out.split("\n")
+    out = str(cp.stdout).strip(r"b'\n")
+    filelist = out.split(r"\n")
     sel_files = []
     for f in filelist:
         if suffix in f:
