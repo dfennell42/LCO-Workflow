@@ -67,3 +67,9 @@ The workflow will also fix certain errors. For cancelation, timeout, 'ZBRENT', o
 
 If no errors are found, the workflow will return "No errors found. All calculations complete.”
 
+### Calculating Vacancy Energies
+Following structural optimization, the user can execute command `wf gete`. This command extracts the ground state energies from the output files and produces two CSV files: "E_pris.csv" and "E_vac.csv". The first contains the modification directory, the modification (as read from the Mods file), and the ground state energies (eV) of the pristine structures. The second contains the modification directory, the modification, which species was removed, the number of atoms removed, the ground state energy (eV), and the vacancy energy (eV) of all vacancy structures. If the vacancy in question is a secondary vacancy (i.e. an oxygen vacancy following a lithium vacancy) the workflow calculates the vacancy energy from the previous vacancy structure rather than the pristine surface. 
+
+The vacancy energy is calculated as follows:
+
+$$E_{vac}=(E_{vs}+N_a*E_a)-E_{pris}$$
