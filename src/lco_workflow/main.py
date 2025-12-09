@@ -157,9 +157,9 @@ def update(
         editable:Annotated[bool,typer.Option("--editable",'-e',help='Install the workflow as an editable package.')] = False,
 ):
     '''Checks workflow version and updates if necessary.'''
-        if editable == True:
-                suffix = '.tar.gz'
-        elif editable == False:
-                suffix = '.whl'
+    if editable == True:
+        suffix = '.tar.gz'
+    elif editable == False:
+        suffix = '.whl'
     check_vrsn(suffix)
     
