@@ -3,6 +3,7 @@ Update command for workflow
 Author: Dorothea Fennell
 Changelog: 
     8-6-25: Created, comments added.
+    12-9-25: Rewrote to pull from Github. 
 """
 #import modules
 from . import version
@@ -10,34 +11,37 @@ import os
 import shutil
 import subprocess as sp
 #define functions
-def get_new_vrsn():
-    '''Gets version of whl file in WF-Files.'''
-    dirname = '/hpcgpfs01/scratch/dfennell/WF-Files'
-    whl_files = []
-    for root, dirs, files in os.walk(dirname):
-        for file in files:
-            if file.endswith('.whl'):
-                whl_files.append(file)
-   
-    if not whl_files:
-        print('No .whl files found.')
-        return 
-    
-    whl_files.sort()
-    latest_file = whl_files[-1]
-    vname = latest_file.split('-')[1]
-    return vname, latest_file
+def check_gh():
+    '''checks to see if gh extension is installed.'''
+    cp = sp.run(['gh','ext','list'], capture_output=True)
+    if "gh-cp" in cp.stdout:
+        return
+    else:
+        sp.check_call(['gh','ext','install','mislav/gh-cp'])
 
-def check_vrsn():
-    '''checks current version vs WF-Files. Installs new version if necessary.'''
+def get_pkg(suffix):
+    '''get files from repository.'''
+    cp = sp.run(['gh','api','-H','accept:application/vnd.github.v3.raw','repos/dfennell42/LCO-Workflow/contents/dist/','--jq','.[].name'],capture_output=True)
+    out = str(cp.stdout)
+    filelist = out.strip("b'").split('\n')
+    sel_files = []
+    for f in filelist:
+        if suffix in f:
+            sel_files.append(f)
+    sel_files.sort()
+    latest_file = sel_files[-1]
+    vname = latest_file.split('-')[1].strip('.targz')
+    return vname, latest_file
+    
+def check_vrsn(suffix):
+    '''checks current version. Installs new version if necessary.'''
     current_vrsn = version
-    new_vrsn, latest_file = get_new_vrsn()
+    check_gh()
+    new_vrsn, latest_file = get_pkg(suffix)
     if current_vrsn == new_vrsn:
         print('Workflow is up to date!')
         return
     elif current_vrsn != new_vrsn:
-        input_dir = os.path.join('/hpcgpfs01/scratch/dfennell/WF-Files',latest_file)
-        output_dir = os.path.expanduser('~/')
-        shutil.copy(input_dir,output_dir)
-        os.chdir(output_dir)
+        destpath = os.path.expanduser('~/')
+        sp.check_call(['gh','cp','dfennell/LCO-Workflow',f'dist/{latest_file}',f'{destpath}'])
         sp.check_call(['pip','install',f'{latest_file}'])
