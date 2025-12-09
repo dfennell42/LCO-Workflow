@@ -153,7 +153,13 @@ def collect(
     copy_all_files(os.getcwd(),force,parent,group)
 
 @app.command()
-def update():
+def update(
+        editable:Annotated[bool,typer.Option("--editable",'-e',help='Install the workflow as an editable package.')] = False,
+):
     '''Checks workflow version and updates if necessary.'''
-    check_vrsn()
+        if editable == True:
+                suffix = '.tar.gz'
+        elif editable == False:
+                suffix = '.whl'
+    check_vrsn(suffix)
     
