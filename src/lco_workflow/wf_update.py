@@ -14,7 +14,7 @@ import subprocess as sp
 def check_gh():
     '''checks to see if gh extension is installed.'''
     cp = sp.run(['gh','ext','list'], capture_output=True)
-    if "gh-cp" in cp.stdout:
+    if "gh-cp" in str(cp.stdout):
         return
     else:
         sp.check_call(['gh','ext','install','mislav/gh-cp'])
