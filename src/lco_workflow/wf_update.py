@@ -56,4 +56,10 @@ def check_vrsn(suffix):
         destpath = os.path.expanduser('~/')
         sp.check_call(['gh','cp','dfennell42/LCO-Workflow',f'dist/{latest_file}',f'{destpath}'])
         if suffix == '.whl':
-            sp.check_call(['pip','install',f'{destpath}/{latest_file}'])
+            try:
+                sp.check_call(['pip','install',f'{destpath}/{latest_file}'])
+            except:
+                print('Updated wheel file has been downloaded but not installed.')
+            else:
+                print('Workflow has been updated!')
+            
