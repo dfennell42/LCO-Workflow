@@ -62,4 +62,6 @@ def check_vrsn(suffix):
                 print('Updated wheel file has been downloaded but not installed.')
             else:
                 print('Workflow has been updated!')
+        elif suffix == '.tar.gz':
+            print('Updated tar file has been downloaded.')
             
