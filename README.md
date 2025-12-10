@@ -41,7 +41,7 @@ To update the workflow to the latest version, use command `wf update`. This comm
 If you prefer to install the workflow as an editable package, use option `--editable` or `-e` to download the tar file instead. 
 
 ## Using the Workflow:  
-### See the workflow guide here: [Workflow Guide](Workflow_Guide.md)**
+### See the workflow guide here: [Workflow Guide](Workflow_Guide.md)
 
 ## Workflow Commands (`wf`):
 **Usage**:
