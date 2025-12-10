@@ -6,6 +6,8 @@
 ### Important Note:
 This version, as the original, was designed to work on a specific computing cluster. As such, there are specific paths/commands that will not work if you upload this to a different cluster. There is another, generalized version of this workflow that does not have that issue. It can be found here: [Delafossite-Workflow](https://github.com/dfennell42/Delafossite-Workflow/)
 
+However, if you prefer to use this version, follow the instructions for the editable installation below. 
+
 ---
 
 A command line interface tool designed to simplify running VASP calculations for LCO. This workflow can:
@@ -19,12 +21,27 @@ A command line interface tool designed to simplify running VASP calculations for
 - Extract descriptors for machine learning
 - Collect all relaxed structure files in one directory.
 
-The workflow uses Atomic Simulation Environment (ASE) and Pymatgen to create/modify structures and generate VASP input files. As of right now, the workflow only supports SLURM for job submission. Any commands that submit calculations ***will not work*** with other workload managers. 
+## Installing the Workflow:
+The workflow can be installed in multiple ways, depending on your needs. If you want to use the workflow as-is, you can install it like any other package. This can be done by using the GitHub link and pip or by downloading the WHL file and installing it manually. 
 
-## Installation
-If you would like to use the workflow as a regular installation, install the .whl file from the release. 
+For the LCO workflow, ***the following editable installation is recommended.*** This is due to the fact that the workflow was written to work on a specific computing cluster, and as such, some paths are hardcoded, which means they will not work if the package is installed as-is. If using the generalized Delafossite workflow, either installation is fine. 
 
-If you would like to use the workflow as an editable installation, install the .tar.gz file from the release. The workflow uses Poetry as a package builder and dependency manager. To use the workflow as an editable installation, refer to the [Poetry Docs](https://python-poetry.org/docs/). 
+**Editable Installation:**  
+To create an editable installation, you will first need to install Poetry, which the workflow uses as a package builder and dependency manager. The Poetry docs are linked here for reference: [Poetry Docs](https://python-poetry.org/docs/). After installing Poetry, run `poetry self update`. This is the best way to make sure Poetry is up to date before setting up the installation. 
+
+You can then install the workflow by either cloning the GitHub repository or by downloading the tar.gz file and un-tarring it in your home directory. Cloning the repository is probably the easiest way to get any updates made, but I (as of writing this) have not tried that method. It should work, but if you want to be one hundred percent certain it will work, I would recommend using the tar file. 
+
+After installing the workflow, go into the package's head directory, which contains the *pyproject.toml* and *poetry.lock* files. Then run `poetry install` to install the workflow as a package and all necessary dependencies. If Poetry returns an error, run `poetry self update` and then try again. 
+
+### Updating the Workflow
+***Note:*** This command requires the installation of GitHub's CLI package `gh` and due to the way it's packaged, Poetry cannot add it as a dependency (believe me, I tried). The package and installation instructions are available here: [GitHub CLI](https://github.com/cli/cli). 
+
+To update the workflow to the latest version, use command `wf update`. This command will download the latest version of the workflow from GitHub and install it. The workflow uses pip to install the new version, so if pip is not installed on your system, it will simply download the wheel file to your home directory. 
+
+If you prefer to install the workflow as an editable package, use option `--editable` or `-e` to download the tar file instead. 
+
+## Using the Workflow:  
+### See the workflow guide here: [Workflow Guide]()**
 
 ## Workflow Commands (`wf`):
 **Usage**:
@@ -243,5 +260,5 @@ $ wf update [OPTIONS]
 ```
 
 **Options**:
-
+* `-e, --editable`: Install the workflow as an editable package. 
 * `--help`: Show this message and exit.
