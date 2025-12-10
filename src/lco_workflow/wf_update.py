@@ -8,10 +8,20 @@ Changelog:
 #import modules
 from . import version
 import os
-import shutil
+import sys
 import subprocess as sp
 #define functions
 def check_gh():
+    '''checks to see if gh cli is installed.'''
+    cp = sp.run(['gh'], capture_output=True)
+    if "command not found" in str(cp.stdout):
+        print('Please install the GitHub CLI package to use wf update.')
+        print('The package can be found at https://github.com/cli/cli.')
+        sys.exit()
+    else:
+        return
+        
+def check_gh_ext():
     '''checks to see if gh extension is installed.'''
     cp = sp.run(['gh','ext','list'], capture_output=True)
     if "gh-cp" in str(cp.stdout):
@@ -37,6 +47,7 @@ def check_vrsn(suffix):
     '''checks current version. Installs new version if necessary.'''
     current_vrsn = version
     check_gh()
+    check_gh_ext()
     new_vrsn, latest_file = get_pkg(suffix)
     if current_vrsn == new_vrsn:
         print('Workflow is up to date!')
