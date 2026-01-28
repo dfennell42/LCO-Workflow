@@ -33,6 +33,7 @@ from .intialize import init_settings
 from .err_check import err_fix
 #descriptor extraction
 from .get_descriptors import extract_desc
+from .collect_descriptors import collect_descriptors
 #collecting CONTCAR files
 from .collect_contcar import copy_all_files
 #update command
@@ -163,3 +164,7 @@ def update(
         suffix = '.whl'
     check_vrsn(suffix)
     
+@app.command()
+def extall():
+    '''Runs descriptor extraction for all directories.'''
+    collect_descriptors()

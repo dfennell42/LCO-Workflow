@@ -8,10 +8,12 @@ Changelog:
     7-16-25: Finished extract function and finished script.
     8-20-25: Added function to extract ionization energy and polarizability. Added ability to get difference between O2p band center and conduction band minimum
     11-7-25: Updating integration
+    12-5-25: Added func to extract Eovac from binary metal oxides
+    1-27-26: Added func to get avg intensity of occupied PDOS regions for LCE
 """
 #import modules
 from pymatgen.io.vasp import Vasprun
-from pymatgen.electronic_structure.core import OrbitalType
+from pymatgen.electronic_structure.core import OrbitalType, Spin
 import os
 from ase.io import read
 from ase.formula import Formula
@@ -68,8 +70,12 @@ def get_atoms(file):
     #determine indices
     o_idx = 43 - atom_rem
     m_idxs = [(21- atom_rem), (23- atom_rem), (25 - atom_rem)]
+    if li == 18:
+        lix = 0
+    else:
+        lix = 1 - (0.055*li)
     
-    return atoms, o_idx, m_idxs
+    return atoms, o_idx, m_idxs, lix
 
 def band_gap(vasprun):
     '''Gets the band gap for the vasprun.xml file.'''
@@ -140,6 +146,7 @@ def get_band_center(vasprun,m_idxs,o_idx,cbm):
             occ_bw = dos.get_band_width(band=OrbitalType(1),sites=site_list, erange=(float('-inf'),0))
             bc_cbm_diff = cbm - bc
             band_centers.update({'O(p)_bc_full':bc,'O(p)_bc_occ':bc_occ,'O(p)_bc_unocc':bc_unocc, 'O(p)_cbm_diff':bc_cbm_diff,'O(p)_band_width':band_width, 'O(p)_occ_bw':occ_bw})
+    '''
     #adding in covalent mixing term
     for num, i in enumerate(m_idxs,1):
         widths = band_centers[f'{i}_band_width']*band_centers['O(p)_band_width']
@@ -148,6 +155,7 @@ def get_band_center(vasprun,m_idxs,o_idx,cbm):
         bc_term = np.abs(bc_diff)
         mix_term = width_term / bc_term
         band_centers.update({f'O_M{num}_mix':mix_term})
+        '''
     bc_ser = pd.Series(band_centers)
     return bc_ser
 
@@ -360,6 +368,69 @@ def get_binary_evac(vasprun,m_idxs):
     bin_evac_ser = pd.Series(binary_evac_data)
     return bin_evac_ser
 
+def pdos_weights(vasprun,m_idxs):
+    '''Gets average intensity of occupied PDOS regions for LCE metals.'''
+    #get data from vasprun
+    struc = vasprun.final_structure
+    all_sites = struc.sites
+    dos = vasprun.complete_dos
+    
+    #set up dicts
+    pdos_weights = {}
+    
+    #get weights
+    for i, site in enumerate(all_sites):
+        if i in m_idxs:
+            #select orbital
+            if site.label == 'Al':
+                orb = OrbitalType(1)
+                lower = -8
+            else:
+                orb = OrbitalType(2)
+                lower = -6
+            
+            #get site dos
+            site_dos = dos.get_site_spd_dos(site=site)
+            orb_dos = site_dos[orb]
+            energy = orb_dos.energies
+            densities = orb_dos.densities
+            up = densities[Spin(1)]
+            down = densities[Spin(-1)]
+            
+            #get bounds
+            for x in range(len(energy)):
+                if energy[x] >= lower:
+                    a = x
+                    break
+            
+            for x in range(len(energy)):
+                if energy[x] >0:
+                    b = x
+                    break
+            
+            #split arrays
+            uls = np.split(up,[a,b])
+            dls = np.split(down,[a,b])
+            #calculate sums & average intensity
+            u_sum = np.sum(uls[1])
+            d_sum = np.sum(dls[1])
+            tot_sum = u_sum + d_sum
+            n = len(uls[1])
+            avg = tot_sum/n
+            #update dict
+            pdos_weights.update({f'{i}_avg_intensity':avg})
+    
+    #avg LCE
+    lce_sum = 0
+    for i in m_idxs:
+        lce_sum += pdos_weights[f'{i}_avg_intensity']
+    lce_avg = lce_sum/(len(m_idxs))
+    pdos_weights.update({'LCE_avg_intensity':lce_avg})
+    
+    #create pd series
+    pdos_weights_ser = pd.Series(pdos_weights)
+    return pdos_weights_ser
+
 def extract_desc(base_dir):
     '''Extract descriptors.'''
     #get directories
@@ -396,7 +467,7 @@ def extract_desc(base_dir):
             if f'Modification_{i}/' in pdos_dir:
                 opt_dir = os.path.dirname(pdos_dir)
                 #get atoms and indices from CONTCAR
-                atoms, o_idx, m_idxs = get_atoms(os.path.join(opt_dir,'CONTCAR'))
+                atoms, o_idx, m_idxs, lix = get_atoms(os.path.join(opt_dir,'CONTCAR'))
                 #get integrated pdos data 
                 pdos_data = get_pdos_data(pdos_dir, m_idxs)
                 #get electronegativty data
@@ -424,10 +495,12 @@ def extract_desc(base_dir):
                 ion_pol_ser = get_ion_e_pol(opt_vpr, m_idxs)
                 #get evac from binary oxides
                 bin_evac_ser = get_binary_evac(opt_vpr, m_idxs)
+                #get avg intensities
+                pdos_weights_ser = pdos_weights(pdos_vpr, m_idxs)
                 #create pandas series with modification and single value returns
-                e_ser = pd.Series(data={'Modification':mod,'E_form':form_en,'E_fermi':fermi,'E_bg':bg_e,'VBM':vbm,'CBM':cbm})
+                e_ser = pd.Series(data={'Modification':mod,'E_form':form_en,'E_fermi':fermi,'E_bg':bg_e,'VBM':vbm,'CBM':cbm,'Lix':lix})
                 #concatenate all series
-                mod_ser = pd.concat([e_ser,pdos_data,bl_ser,eln,bc_ser,t2g_eg,ion_pol_ser,bin_evac_ser])
+                mod_ser = pd.concat([e_ser,pdos_data,bl_ser,eln,bc_ser,t2g_eg,ion_pol_ser,bin_evac_ser,pdos_weights_ser])
                 #append series to list
                 mod_data_list.append(mod_ser)
     

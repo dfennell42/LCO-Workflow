@@ -1,6 +1,6 @@
 # LCO Modification Workflow CLI
 #### Author: Dorothea Fennell (dfennell1@bnl.gov, dfennell37@gmail.com)
-**Version**: 0.9.0
+**Version**: 0.10.0
 
 ---
 ### Important Note:
@@ -70,6 +70,7 @@ $ wf [OPTIONS] COMMAND [ARGS]...
 * `check`: Checks vasp.out for errors and fixes and...
 * `collect`: Collects all CONTCAR files in Structures...
 * `update`: Checks workflow version and updates if...
+* `extall`: Runs descriptor extraction for all directories.
 
 ## `wf init`
 
@@ -261,4 +262,18 @@ $ wf update [OPTIONS]
 
 **Options**:
 * `-e, --editable`: Install the workflow as an editable package. 
+* `--help`: Show this message and exit.
+
+## `wf extall`
+
+Runs descriptor extraction for all directories.
+
+**Usage**:
+
+```console
+$ wf extall [OPTIONS]
+```
+
+**Options**:
+
 * `--help`: Show this message and exit.
