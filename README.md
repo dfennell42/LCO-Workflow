@@ -1,6 +1,6 @@
 # LCO Modification Workflow CLI
 #### Author: Dorothea Fennell (dfennell1@bnl.gov, dfennell37@gmail.com)
-**Version**: 0.10.0
+**Version**: 0.10.1
 
 ---
 ### Important Note:

@@ -110,7 +110,7 @@ def collect_descriptors():
         elif 'DataFrame' in typ:
             df = extract_chk
             lix = float(df.at[0,"Lix"])
-            li = (100-(lix*100))/5.5
+            li = int((100-(lix*100))/5.5)
             m1 = str(21 - li)
             m2 = str(23 - li)
             m3 = str(25 - li)
@@ -126,7 +126,7 @@ def collect_descriptors():
                 if m3 in c:
                     new = c.replace(m3,'M3')
                     rename.update({f'{c}':new})
-            df = df.rename(rename)
+            df = df.rename(columns=rename)
             desc_tot.append(df)
     
     #concat dfs
