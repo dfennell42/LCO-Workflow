@@ -66,6 +66,7 @@ def collect_descriptors():
                 '/hpcgpfs01/scratch/CTCMO-2025/LCO-middle/copied-Ternary-Thea/FeAlM', 
                 '/hpcgpfs01/scratch/CTCMO-2025/LCO-middle/4M-vars/123-ABA/pristine', 
                 '/hpcgpfs01/scratch/CTCMO-2025/NMC-middle/Thea/NMC-NPA/jlb',
+                '/hpcgpfs01/scratch/CTCMO-2025/NMC-middle/Thea/3Co'
                 '/hpcgpfs01/scratch/CTCMO-2025/NMC-middle/Natalia/NiMnVars-newpdos',
                 '/hpcgpfs01/scratch/CTCMO-2025/NMC-middle/kailey/NMC_Middle/Kai/check',
                 '/hpcgpfs01/scratch/CTCMO-2025/NMC-middle/Patterns/CLEAN',
