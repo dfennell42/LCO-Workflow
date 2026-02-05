@@ -10,6 +10,9 @@ Changelog:
     11-7-25: Updating integration
     12-5-25: Added func to extract Eovac from binary metal oxides
     1-27-26: Added func to get avg intensity of occupied PDOS regions for LCE
+    2-3-26: Added std. reduction potential descriptor. Added avg_ion_e to function getting ionization energy. Added section to calculate
+            average band centers & widths for LCE.Also added section to get calculated # of electrons for new potential descriptor. 
+            Added func to calculate electron and avg pdos intensity weighted descriptors. 
 """
 #import modules
 from pymatgen.io.vasp import Vasprun
@@ -119,6 +122,11 @@ def get_band_center(vasprun,m_idxs,o_idx,cbm):
     dos = vasprun.complete_dos
     #get sites & band centers 
     band_centers = {}
+    val_full = 0
+    val_occ = 0
+    val_unocc = 0
+    bw_full = 0
+    bw_occ = 0
     for i, site in enumerate(all_sites):
         if i in m_idxs:
             if site.label == 'Al':
@@ -137,6 +145,11 @@ def get_band_center(vasprun,m_idxs,o_idx,cbm):
                 band_width = dos.get_band_width(sites=site_list)
                 occ_bw = dos.get_band_width(sites=site_list, erange=(float('-inf'),0))
                 band_centers.update({f'{i}_bc_full':bc,f'{i}_bc_occ':bc_occ,f'{i}_bc_unocc':bc_unocc,f'{i}_band_width':band_width,f'{i}_occ_bw':occ_bw})
+            val_full += bc
+            val_occ += bc_occ
+            val_unocc += bc_unocc
+            bw_full += band_width
+            bw_occ += occ_bw
         if i == o_idx:
             site_list=[site]
             bc = dos.get_band_center(band=OrbitalType(1),sites=site_list)
@@ -146,18 +159,17 @@ def get_band_center(vasprun,m_idxs,o_idx,cbm):
             occ_bw = dos.get_band_width(band=OrbitalType(1),sites=site_list, erange=(float('-inf'),0))
             bc_cbm_diff = cbm - bc
             band_centers.update({'O(p)_bc_full':bc,'O(p)_bc_occ':bc_occ,'O(p)_bc_unocc':bc_unocc, 'O(p)_cbm_diff':bc_cbm_diff,'O(p)_band_width':band_width, 'O(p)_occ_bw':occ_bw})
-    '''
-    #adding in covalent mixing term
-    for num, i in enumerate(m_idxs,1):
-        widths = band_centers[f'{i}_band_width']*band_centers['O(p)_band_width']
-        width_term = np.sqrt(widths)
-        bc_diff = band_centers[f'{i}_bc_full']-band_centers['O(p)_bc_full']
-        bc_term = np.abs(bc_diff)
-        mix_term = width_term / bc_term
-        band_centers.update({f'O_M{num}_mix':mix_term})
-        '''
+    
+    avg_val_full = val_full/3
+    avg_val_occ = val_occ/3
+    avg_val_unocc = val_unocc/3
+    avg_band_width = bw_full/3
+    avg_bw_occ = bw_occ/3
+    full_bc_diff = avg_val_full - band_centers['O(p)_bc_full']
+    occ_bc_diff = avg_val_occ - band_centers['O(p)_bc_occ']
+    avg_bc = pd.Series({'avg_val_full':avg_val_full,'avg_val_occ':avg_val_occ,'avg_val_unocc':avg_val_unocc,'avg_band_width':avg_band_width,'avg_bw_occ':avg_bw_occ,'full_bc_diff':full_bc_diff, 'occ_bc_diff':occ_bc_diff})
     bc_ser = pd.Series(band_centers)
-    return bc_ser
+    return bc_ser, avg_bc
 
 def get_eln(atoms, m_idxs):
     '''Gets electronegativity descriptors'''
@@ -306,6 +318,13 @@ def get_pdos_data(pdos_dir,m_idxs):
             
     #create series for 3z
     Z = pd.Series(data={'3Z':Z_sum})
+    #get # of electrons for LCE
+    LCE_elec = {}
+    for i in sel_df.index:
+        elec = sel_df.at[i,'e_tot']
+        idx = sel_df.at[i,'Atom index']
+        LCE_elec.update({f'{idx}_elec':elec})
+    elec_ser = pd.Series(LCE_elec)
     #drop unnecessary items
     sel_sum =sel_sum.drop(index=['Atom index','e_tot'])
     sums = sums.drop(index='Atom index')
@@ -314,7 +333,7 @@ def get_pdos_data(pdos_dir,m_idxs):
     sums = sums.rename({'OS':'tot_OS','spin':'tot_S','H d/p':'tot_Hdp'})
     #concatenate pd Series
     pdos_data = pd.concat([sel_sum,Z,sums])
-    return pdos_data
+    return pdos_data,elec_ser
 
 def get_ion_e_pol(vasprun,m_idxs):
     '''Gets first ionization energy and polarizability'''
@@ -329,10 +348,12 @@ def get_ion_e_pol(vasprun,m_idxs):
         'Ni':{'val':49, 'stddev':3}
         }
     ion_pol_data = {}
+    sum_ion_e = 0
     for i,site in enumerate(all_sites):
         if i in m_idxs:
             ele = site.specie
             ion_e = ele.ionization_energy
+            sum_ion_e += ion_e
             if site.label in pol_dict.keys():
                 pol_data = pol_dict[site.label]
                 val = pol_data['val']
@@ -340,6 +361,8 @@ def get_ion_e_pol(vasprun,m_idxs):
                 min_pol = val - stddev
                 max_pol = val + stddev
             ion_pol_data.update({f'{i}_ion_e':ion_e,f'{i}_min_pol':min_pol,f'{i}_pol':val,f'{i}_max_pol':max_pol})
+    avg_ion_e = sum_ion_e/3
+    ion_pol_data.update({'avg_ion_e':avg_ion_e})
     ion_pol_ser = pd.Series(ion_pol_data)
     return ion_pol_ser
 
@@ -368,6 +391,32 @@ def get_binary_evac(vasprun,m_idxs):
     bin_evac_ser = pd.Series(binary_evac_data)
     return bin_evac_ser
 
+def get_std_pot(vasprun,m_idxs):
+    '''Gets standard reduction potential for LCE metals. Values are for M^x+ + x*e- -> M(s), from CRC handbook 97th ed.'''
+    #get data from vasprun
+    struc = vasprun.final_structure
+    all_sites = struc.sites
+    
+    redox_dict = {
+        'Al':-1.676,
+        'Mn':-1.185,
+        'Fe':-0.447,
+        'Co':-0.28,
+        'Ni':-0.257
+        }
+    std_redox_data = {}
+    sum_std_pot = 0
+    for i,site in enumerate(all_sites):
+        if i in m_idxs:
+            if site.label in redox_dict.keys():
+                std_pot = redox_dict[site.label]
+                sum_std_pot += std_pot
+                std_redox_data.update({f'{i}_std_pot':std_pot})
+    avg_std_pot = sum_std_pot/3
+    std_redox_data.update({'avg_std_pot':avg_std_pot})
+    std_redox_ser = pd.Series(std_redox_data)
+    return std_redox_ser
+    
 def pdos_weights(vasprun,m_idxs):
     '''Gets average intensity of occupied PDOS regions for LCE metals.'''
     #get data from vasprun
@@ -431,6 +480,34 @@ def pdos_weights(vasprun,m_idxs):
     pdos_weights_ser = pd.Series(pdos_weights)
     return pdos_weights_ser
 
+def get_wtd_desc(m_idxs,pdos_weights,elec_data,bc_ser):
+    '''Gets various weighted descriptors.'''
+    wtd_desc ={}
+    #get electron weighted descriptors
+    sum_bc_o = 0
+    sum_bw_o = 0
+    tot_e = 0
+    for i in m_idxs:
+        elec = elec_data[f'{i}_elec']
+        tot_e += elec
+        sum_bc_o += (bc_ser[f'{i}_bc_occ']* elec)
+        sum_bw_o += (bc_ser[f'{i}_occ_bw']* elec)
+    wtd_desc.update({'elec_wtd_bc_occ':(sum_bc_o/tot_e),'elec_wtd_bw_occ':(sum_bw_o/tot_e)})
+    
+    #get intensity weighted descriptors
+    sum_bc = 0
+    sum_bw = 0
+    sum_ints = 0
+    for i in m_idxs:
+        wt = pdos_weights[f'{i}_avg_intensity']
+        sum_ints += wt
+        sum_bc += (bc_ser[f'{i}_bc_occ']* wt)
+        sum_bw += (bc_ser[f'{i}_occ_bw']* wt)
+    wtd_desc.update({'int_wtd_bc_occ':(sum_bc/sum_ints),'int_wtd_bw_occ':(sum_bw/sum_ints)})
+    
+    wtd_ser = pd.Series(wtd_desc)
+    return wtd_ser
+
 def extract_desc(base_dir):
     '''Extract descriptors.'''
     #get directories
@@ -469,7 +546,7 @@ def extract_desc(base_dir):
                 #get atoms and indices from CONTCAR
                 atoms, o_idx, m_idxs, lix = get_atoms(os.path.join(opt_dir,'CONTCAR'))
                 #get integrated pdos data 
-                pdos_data = get_pdos_data(pdos_dir, m_idxs)
+                pdos_data, elec_data = get_pdos_data(pdos_dir, m_idxs)
                 #get electronegativty data
                 eln = get_eln(atoms,m_idxs)
                 #get bond lengths
@@ -488,19 +565,23 @@ def extract_desc(base_dir):
                     fermi = dos.efermi
                     cbm,vbm = dos.get_cbm_vbm()
                 #get band centers
-                bc_ser = get_band_center(pdos_vpr, m_idxs,o_idx,cbm)
+                bc_ser, avg_bc = get_band_center(pdos_vpr, m_idxs,o_idx,cbm)
                 #get t2g/eg dos
                 t2g_eg = t2g_eg_dos(pdos_vpr, m_idxs)
                 #get ionization e and polarizability
                 ion_pol_ser = get_ion_e_pol(opt_vpr, m_idxs)
                 #get evac from binary oxides
                 bin_evac_ser = get_binary_evac(opt_vpr, m_idxs)
+                #get std reduction potential
+                std_pot_ser = get_std_pot(opt_vpr, m_idxs)
                 #get avg intensities
                 pdos_weights_ser = pdos_weights(pdos_vpr, m_idxs)
+                #get weighted descriptors
+                wtd_ser = get_wtd_desc(m_idxs, pdos_weights_ser, elec_data, bc_ser)
                 #create pandas series with modification and single value returns
                 e_ser = pd.Series(data={'Modification':mod,'E_form':form_en,'E_fermi':fermi,'E_bg':bg_e,'VBM':vbm,'CBM':cbm,'Lix':lix})
                 #concatenate all series
-                mod_ser = pd.concat([e_ser,pdos_data,bl_ser,eln,bc_ser,t2g_eg,ion_pol_ser,bin_evac_ser,pdos_weights_ser])
+                mod_ser = pd.concat([e_ser,pdos_data,bl_ser,eln,bc_ser,t2g_eg,ion_pol_ser,bin_evac_ser,avg_bc,std_pot_ser,pdos_weights_ser,wtd_ser])
                 #append series to list
                 mod_data_list.append(mod_ser)
     

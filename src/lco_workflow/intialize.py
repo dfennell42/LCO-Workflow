@@ -25,7 +25,8 @@ def copy_files(source_dir, dest_dir):
 
 def make_wf_dir(source_dir):
     '''Makes directory with base files for workflow tools.'''
-    wf_dir = 'wf-user-files'
+    user_dir = os.path.expanduser('~/')
+    wf_dir = f'{user_dir}/wf-user-files'
     os.makedirs(wf_dir,exist_ok=True)
     
     #copy files

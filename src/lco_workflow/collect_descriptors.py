@@ -5,6 +5,7 @@ Extract all descriptors and collect in one file.
 Author: Dorothea Fennell
 Changelog:
     1-27-26: Created, comments added.
+    2-3-26: Added line to set index of total data frame to the modification.
 """
 #import modules
 import os
@@ -66,7 +67,7 @@ def collect_descriptors():
                 '/hpcgpfs01/scratch/CTCMO-2025/LCO-middle/copied-Ternary-Thea/FeAlM', 
                 '/hpcgpfs01/scratch/CTCMO-2025/LCO-middle/4M-vars/123-ABA/pristine', 
                 '/hpcgpfs01/scratch/CTCMO-2025/NMC-middle/Thea/NMC-NPA/jlb',
-                '/hpcgpfs01/scratch/CTCMO-2025/NMC-middle/Thea/3Co'
+                '/hpcgpfs01/scratch/CTCMO-2025/NMC-middle/Thea/3Co',
                 '/hpcgpfs01/scratch/CTCMO-2025/NMC-middle/Natalia/NiMnVars-newpdos',
                 '/hpcgpfs01/scratch/CTCMO-2025/NMC-middle/kailey/NMC_Middle/Kai/check',
                 '/hpcgpfs01/scratch/CTCMO-2025/NMC-middle/Patterns/CLEAN',
@@ -132,6 +133,7 @@ def collect_descriptors():
     
     #concat dfs
     tot_df = pd.concat(desc_tot)
+    tot_df.set_index('Modification',inplace=True)
     date = get_date()
     tot_df.to_csv(f'/hpcgpfs01/scratch/CTCMO-2025/Descriptors/all-descriptors-{date}.csv')
     
