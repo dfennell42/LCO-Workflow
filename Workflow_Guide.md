@@ -41,12 +41,15 @@ If you're not certain of the pair indices, create a blank mods file, then run co
 Following the creation of the Mods file, run command `wf modify`. The LCO workflow will automatically modify the Co atoms, while the Delafossite version will prompt the user as to which element pairs they want to replace. The workflow will create a new directory for each modification, titled `/Modification_{#}` where {#} is replaced by the line number in the Mods file. It then modifies the base POSCAR using Atomic Simulation Environment (ASE) and generates the VASP input files using Pymatgen in subdirectory `/VASP_inputs`. 
 
 #### Creating Vacancies:
-In addition to replacing atoms, the workflow can also create vacancies. To create vacancies, run command `wf removepairs`. The workflow will then prompt the user to determine if the new vacancies should be generated from the pristine structures or from existing vacancy structures, which species should be removed, and the index of the pair(s) to be removed. The workflow then modifies the structures and generates the input files in a new subdirectory under `VASP_inputs` called `{Element}_Pairs_Removed` where {Element} is the symbol of the species removed. 
+In addition to replacing atoms, the workflow can also create vacancies. To create vacancies, run command `wf removepairs`. The workflow will then prompt the user to determine if the new vacancies should be generated from the pristine structures  vacancy structures, or existing adsorption structures, as well as which species should be removed, and the index of the pair(s) to be removed. The workflow then modifies the structures and generates the input files in a new subdirectory under `VASP_inputs` called `{Element}_Pairs_Removed` where {Element} is the symbol of the species removed. 
 
 This command can be used repeatedly to create multiple vacancies. 
 
+#### Adding Atoms:
+The workflow can also add pairs of atoms to the structure. To add atoms, run command `wf addpairs`. The workflow will then prompt the user to determine if the new structures should be generated from the pristine structures, vacancy structures, or existing adsorption structures. It will then ask which species the new pair(s) should be attached to, the index of the pair(s) to add new atoms to, and the species of the new atoms. The workflow then modifies the structures and generates the input files in a new subdirectory under `VASP_inputs` called `{Element}_Pairs_Added` where {Element} is the symbol of the species added.
+
 ### Running Calculations:
-Once the set of structures has been created and all desired vacancy structures have been generated, the user executes the command `wf submit`. This command copies the Bash submission script to each directory, then submits each calculation to the scheduling queue. By default, the workflow will submit all structural optimization calculations for pristine and vacancy structures. However, if the user wishes to only submit calculations for the vacancy structures, the command can be executed with `--vac` or `-v`. 
+Once the set of structures has been created and all desired vacancy structures have been generated, the user executes the command `wf submit`. This command copies the Bash submission script to each directory, then submits each calculation to the scheduling queue. By default, the workflow will submit all structural optimization calculations. However, if the user wishes to only submit calculations for the vacancy or adsorption structures, the command can be executed with `--vac`/`-v` or `--add`/`-a`, respectively. 
 
 To check if the calculations have completed properly, the user can execute `wf check`. Any errors returned are printed to the command line. In addition to VASP errors, the workflow will also check if the calculations are still running, were cancelled, or timed out. 
 
@@ -98,10 +101,20 @@ Additionally, if the user types "exit" into any of the above prompts, the script
 
 Using the given information, the workflow then plots the PDOS, saves it as a PNG file to the PDOS directory, and displays the image in an X11 window. If you wish to plot and save the PDOS without displaying them, the command can be run with option `--no-show-image` or `-n`. 
 
+### Band Structure Calculations:
+Once the structural optimizatons are complete, the user can then set up band structure calculations by executing command `wf bands`. The workflow will create a new subdirectory in the `/VASP_inputs`, titled `./Band_struc`. It will then copy the appropriate input files to the directory, using the CONTCAR from the optimization calculations as POSCAR, and modify INCAR based on "bands_incar_params.txt". 
+
+The band structure calculations use a hybrid functional, and as such, ***require a complete WAVECAR file*** from the structural optimization. If the WAVECAR file exists but is empty, the workflow will not set up band structure calculations for that directory. 
+
+Once the calculations have been set up, the user can submit them using command `wf submit bands`. 
+
 ### Additional Commands: LCO Workflow ONLY
-The following two commands are only included in the LCO version of the workflow, due to their specificity.
+The following commands are only included in the LCO version of the workflow, due to their specificity.
 ##### `wf extract`: 
 This command extracts descriptors for use in machine learning. This command was not included in the Delafossite workflow because all the extracted descriptors were specific to the research question, and it would be difficult to generalize.
+
+##### `wf extall`:
+This command using `wf extract` to extract descriptors for all the structures in the data set, via hard-coded file paths. Again, this command was not generalized due to the specificity of the extracted descriptors as well as the hard-coded file paths. 
 
 ##### `wf collect`:
 This command collects all the output structure files (CONTCAR) into a series of directories based on structure type, vacancies, and calculation type. All the filepaths in this command are hard-coded to locations on the computing cluster the workflow was built on, which makes it, again, difficult to generalize. A generalizable version could potentially be made in the future, but it was not a priority when building the delafossite workflow. 

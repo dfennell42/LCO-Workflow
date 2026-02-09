@@ -1,6 +1,6 @@
 # LCO Modification Workflow CLI
 #### Author: Dorothea Fennell (dfennell1@bnl.gov, dfennell37@gmail.com)
-**Version**: 0.10.2
+**Version**: 0.11.0
 
 ---
 ### Important Note:
@@ -60,6 +60,7 @@ $ wf [OPTIONS] COMMAND [ARGS]...
 * `init`: Initializes workflow settings.
 * `modify`: Modifies LCO structure based on user input.
 * `removepairs`: Removes Li/O pairs from structures
+* `addpairs`: Adds pairs of atoms to structures.
 * `gete`: Gets pristine E and E vac
 * `pdos`: sets up PDOS calculations
 * `parse`: Parses PDOS data into individual files and...
@@ -108,6 +109,20 @@ Removes Li/O pairs from structures
 
 ```console
 $ wf removepairs [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `wf addpairs`
+
+Adds pairs of atoms to structures.
+
+**Usage**:
+
+```console
+$ wf addpairs [OPTIONS]
 ```
 
 **Options**:

@@ -14,7 +14,9 @@ from .VASP_input import generate_vasp_inputs_in_dir
 from .modINCAR import update_incar_files_with_magmom
 #bash script run-removal
 from .remove_li_o_pairs import process_vasp_inputs
-from .removed_pairs_INCARmod import process_pairs_removed_dirs
+from .removed_pairs_INCARmod import process_pairs_mod_dirs
+#add pairs
+from .add_pairs import process_vasp_dirs
 #bash script process data
 from .get_e_pristine import get_all_e
 from .Calc_Evac import process_e_vac
@@ -60,7 +62,7 @@ def modify():
     '''Modifies LCO structure based on user input. Needs ModsCo.txt '''
     modify_lco()
     process_poscar_files()
-    process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac = False)
+    process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac = False, add=False)
     generate_vasp_inputs_in_dir(os.getcwd(),custom_incar_params = {
         "ENCUT": 520,
         "ISIF": 3,
@@ -77,9 +79,16 @@ def modify():
 def removepairs():
     '''Removes Li/O pairs from structures '''
     choice = process_vasp_inputs(os.getcwd())
-    process_pairs_removed_dirs(os.getcwd(),choice)
-    process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac = True)
+    process_pairs_mod_dirs(os.getcwd(),choice, 'Removed')
+    process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac = True, add=False)
 
+@app.command()
+def addpairs():
+    '''Adds pairs of atoms to structures.'''
+    element_name = process_vasp_dirs(os.getcwd())
+    process_pairs_mod_dirs(os.getcwd(), element_name, 'Added')
+    process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac=False, add=True)
+    
 @app.command()
 def gete():
     '''Gets pristine E and E vac '''
@@ -121,21 +130,24 @@ def extract():
 def submit(
         calc: Annotated[str, typer.Argument(help='The type of calculation to submit. Options: struc: Pristine or vacancy surface calculations. pdos: PDOS calculations')] = 'struc',
         vac:Annotated[bool,typer.Option("--vac","-v",help='Run only vacancy calculations. Does not work with calc = pdos')] = False,
+        add: Annotated[bool,typer.Option("--add","-a",help='Run only adsorption calculations. Does not work with calc = pdos')] = False,
         ):
     '''Submits vasp calculations.'''
     pkgdir = sys.modules['lco_workflow'].__path__[0]
     filedir = os.path.expanduser('~/wf-user-files')
     fullpath = os.path.join(filedir, 'vasp.sh')
     shutil.copy(fullpath, os.getcwd())
+    fpath = os.path.join(pkgdir,'submitall-vasp.sh')
     if calc.lower() == 'struc':
         if vac:
-            fpath = os.path.join(pkgdir,'submitvacancy-vasp.sh')
+            calc_type = "*_Removed"
+        elif add:
+            calc_type = "*_Added"
         else:
-            fpath = os.path.join(pkgdir,'submitall-vasp.sh')
-        os.system(f'bash {fpath}')
+            calc_type = "all"
     elif calc.lower() == 'pdos':
-        fpath = os.path.join(pkgdir,'submitpdos-vasp.sh')
-        os.system(f'bash {fpath}')
+        calc_type = "PDOS"
+    os.system(f'bash {fpath} {calc_type}')
         
 @app.command()
 def check(

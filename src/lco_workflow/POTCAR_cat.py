@@ -1,6 +1,6 @@
 import os
 
-def find_vasp_files(vac = False):
+def find_vasp_files(vac = False, add = False):
     """
     Recursively find all .vasp files in subdirectories and group them by directory.
     """
@@ -8,10 +8,13 @@ def find_vasp_files(vac = False):
     for root, _, files in os.walk("."):
         for file in files:
             if file.endswith(".vasp"):
-                if vac == False:
+                if vac == False and add == False:
                     vasp_files_by_dir.setdefault(root, []).append(file)
-                elif vac == True:
+                elif vac == True and add == False:
                     if root.endswith('Removed'):
+                        vasp_files_by_dir.setdefault(root, []).append(file)
+                elif vac == False and add == True:
+                    if root.endswith('Added'):
                         vasp_files_by_dir.setdefault(root, []).append(file)
     return vasp_files_by_dir
 
@@ -39,11 +42,11 @@ def concatenate_potcar(elements, potcar_base_path, output_filepath):
                 master_potcar.write(element_potcar.read())
     print(f"Created POTCAR file: {output_filepath}")
 
-def process_directories(potcar_base_path,vac):
+def process_directories(potcar_base_path,vac, add):
     """
     Process each directory containing .vasp files, extract elements, and create a POTCAR file.
     """
-    vasp_files_by_dir = find_vasp_files(vac)
+    vasp_files_by_dir = find_vasp_files(vac,add)
 
     if not vasp_files_by_dir:
         print("No .vasp files found!")
@@ -66,7 +69,6 @@ def process_directories(potcar_base_path,vac):
         output_filepath = os.path.join(directory, "POTCAR")
         concatenate_potcar(all_elements, potcar_base_path, output_filepath)
 
-# Configuration
-POTCAR_BASE_PATH = "/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/"  # Path for VASP potentials on IC2
+
 
 

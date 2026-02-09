@@ -91,10 +91,11 @@ def process_vasp_inputs(base_directory):
         print("No VASP_inputs directories found.")
         return
     
-    #ask user if they want to remove from pristine structures or vacancy structures
-    print("\nWould you like to remove pairs from pristine structures or vacancy structures?")
+    #ask user which structures they want to add to
+    print("\nWould you like to remove pairs from pristine, vacancy, or adsorption structures?")
     print("1: Pristine")
     print("2: Vacancy")
+    print("3: Adsorption")
     struc = input("Enter the number of your choice: ")
     vasp_dirs=[]
     
@@ -104,6 +105,9 @@ def process_vasp_inputs(base_directory):
                 vasp_dirs.append(i)
         elif struc == '2':
             if i.endswith('_Removed'):
+                vasp_dirs.append(i)
+        elif struc == '3':
+            if i.endswith('_Added'):
                 vasp_dirs.append(i)
                 
     # Use the first POSCAR to get the pairs and user selection
