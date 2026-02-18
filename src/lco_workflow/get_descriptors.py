@@ -39,7 +39,7 @@ def get_dirs(base_dir, ask = True):
     '''Gets list of PDOS directories.'''
     pdos_dirs=[]
     if ask == True:
-        print("\nWould you like to remove pairs from pristine, vacancy, or adsorption structures?")
+        print("\nWould you like to extract descriptors for pristine, vacancy, or adsorption structures?")
         print("1: Pristine")
         print("2: Vacancy")
         print("3: Adsorption")
