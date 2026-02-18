@@ -6,12 +6,13 @@ Author: Dorothea Fennell
 Changelog:
     1-27-26: Created, comments added.
     2-3-26: Added line to set index of total data frame to the modification.
+    2-18-26: Changed extraction command to run function from get_descriptors.py rather than running the command in the terminal. 
 """
 #import modules
 import os
-import subprocess as sp
 import pandas as pd
 from datetime import date
+from .get_descriptors import extract_desc
 
 #define functions
 def get_date():
@@ -42,7 +43,7 @@ def run_extract(head_dir):
     if file_chk == True:
         os.chdir(head_dir)
         try:
-            sp.check_call(['wf','extract'])
+            extract_desc(head_dir,ask=False)
         except:
             return False
         else:

@@ -35,13 +35,25 @@ def sort_mods(data):
     num = data.split('_')[1]
     return int(num)
 
-def get_dirs(base_dir):
+def get_dirs(base_dir, ask = True):
     '''Gets list of PDOS directories.'''
     pdos_dirs=[]
+    if ask == True:
+        print("\nWould you like to remove pairs from pristine, vacancy, or adsorption structures?")
+        print("1: Pristine")
+        print("2: Vacancy")
+        print("3: Adsorption")
+        struc = input("Enter the number of your choice: ")
+    if struc == '1':
+        base = 'VASP_inputs'
+    elif struc == '2':
+        base = '_Removed'
+    elif struc == '3':
+        base = '_Added'
     for root, dirs, files in os.walk(base_dir):
-        if root.endswith("VASP_inputs/PDOS") and 'integrated-pdos.csv' in files:
+        if root.endswith(f"{base}/PDOS") and 'integrated-pdos.csv' in files:
             pdos_dirs.append(root)
-        elif root.endswith("VASP_inputs/PDOS") and "integrated-pdos.csv" not in files:
+        elif root.endswith(f"{base}/PDOS") and "integrated-pdos.csv" not in files:
             print("PDOS calculations haven't been integrated yet.")
     def sort_dirs(data):
         path_list = data.split('/')
@@ -101,6 +113,7 @@ def get_form_en(vasprun):
         "Co": -6.8377063,
         "Fe": -8.243958785,
         "Al": -3.764685413,
+        "Ga": -2.913762123,
     }
     #read vasprun.xml, get final structure, energy & composition
     struc = vasprun.final_structure
@@ -180,7 +193,8 @@ def get_eln(atoms, m_idxs):
         'Mn': {'Z': 25, 'chi': 1.55, 'radius': 1.39},
         'Fe': {'Z': 26, 'chi': 1.83, 'radius': 1.32},
         'Co': {'Z': 27, 'chi': 1.88, 'radius': 1.26},
-        'Ni': {'Z': 28, 'chi': 1.91, 'radius': 1.24}
+        'Ni': {'Z': 28, 'chi': 1.91, 'radius': 1.24},
+        'Ga': {'Z': 31, 'chi': 1.81, 'radius': 1.22}
     }
     #base variables
     chi_O = 3.44
@@ -308,7 +322,8 @@ def get_pdos_data(pdos_dir,m_idxs):
         'Mn':25,
         'Fe':26,
         'Co':27,
-        'Ni':28
+        'Ni':28,
+        'Ga':31,
         }
     Z_sum=0
     #get 3Z
@@ -345,7 +360,8 @@ def get_ion_e_pol(vasprun,m_idxs):
         'Mn':{'val':68, 'stddev':9},
         'Fe':{'val':62, 'stddev':4},
         'Co':{'val':55, 'stddev':4},
-        'Ni':{'val':49, 'stddev':3}
+        'Ni':{'val':49, 'stddev':3},
+        'Ga':{'val':50, 'stddev':3},
         }
     ion_pol_data = {}
     sum_ion_e = 0
@@ -376,7 +392,8 @@ def get_binary_evac(vasprun,m_idxs):
         'Mn':3.28671184,
         'Fe':3.778409415,
         'Co':2.48314856,
-        'Ni':2.02617786
+        'Ni':2.02617786,
+        'Ga':4.596923115,
         }
     binary_evac_data = {}
     sum_bin_evac = 0
@@ -402,7 +419,8 @@ def get_std_pot(vasprun,m_idxs):
         'Mn':-1.185,
         'Fe':-0.447,
         'Co':-0.28,
-        'Ni':-0.257
+        'Ni':-0.257,
+        'Ga':-0.549,
         }
     std_redox_data = {}
     sum_std_pot = 0
@@ -508,10 +526,10 @@ def get_wtd_desc(m_idxs,pdos_weights,elec_data,bc_ser):
     wtd_ser = pd.Series(wtd_desc)
     return wtd_ser
 
-def extract_desc(base_dir):
+def extract_desc(base_dir,ask=True):
     '''Extract descriptors.'''
     #get directories
-    pdos_dirs = get_dirs(base_dir)
+    pdos_dirs = get_dirs(base_dir,ask=True)
     
     if not pdos_dirs:
         print('No PDOS directories found. Exiting...')
