@@ -50,6 +50,9 @@ def get_dirs(base_dir, ask = True):
         base = '_Removed'
     elif struc == '3':
         base = '_Added'
+    elif ask == False:
+        base = ''
+        
     for root, dirs, files in os.walk(base_dir):
         if root.endswith(f"{base}/PDOS") and 'integrated-pdos.csv' in files:
             pdos_dirs.append(root)
@@ -142,7 +145,7 @@ def get_band_center(vasprun,m_idxs,o_idx,cbm):
     bw_occ = 0
     for i, site in enumerate(all_sites):
         if i in m_idxs:
-            if site.label == 'Al':
+            if site.label in ('Al','Ga'):
                 site_list=[site]
                 bc = dos.get_band_center(band=OrbitalType(1),sites=site_list)
                 bc_occ = dos.get_band_center(band=OrbitalType(1),sites=site_list,erange=(float('-inf'),0))
@@ -270,7 +273,7 @@ def t2g_eg_dos(vasprun,m_idxs):
     #get dos data
     for i, site in enumerate(all_sites):
         if i in m_idxs:
-            if site.label == 'Al':
+            if site.label in ('Al','Ga'):
                 al_dict.update({f'{i}_t2g':0,f'{i}_eg':0})
             else: 
                 bc = dos.get_site_t2g_eg_resolved_dos(site=site)
