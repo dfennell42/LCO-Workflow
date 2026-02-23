@@ -110,6 +110,8 @@ The band structure calculations use a hybrid functional, and as such, ***require
 
 Once the calculations have been set up, the user can submit them using command `wf submit bands`. 
 
+Once calculations are complete, the user can extract the band gap, Fermi energy, VBM, and CBM of the band structure calculations by running command `wf getgap` in the head directory. The workflow will calculate the band gap and other data points for each modification directory and output a CSV file titled "band_gap.csv" containing the modification (as read from the Mods file), the band gap, the Fermi energy, the valence band maximum, and the conduction band minimum. All energies are given in eV. 
+
 ### Additional Commands: LCO Workflow ONLY
 The following commands are only included in the LCO version of the workflow, due to their specificity.
 ##### `wf extract`: 
