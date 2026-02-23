@@ -26,6 +26,9 @@ The workflow can be installed in multiple ways, depending on your needs. If you 
 
 For the LCO workflow, ***the following editable installation is recommended.*** This is due to the fact that the workflow was written to work on a specific computing cluster, and as such, some paths are hardcoded, which means they will not work if the package is installed as-is. If using the generalized Delafossite workflow, either installation is fine. 
 
+| Note: It is *highly recommended* to install and use the workflow in a separate environment to minimize potential dependency conflicts.|
+|:---|
+
 **Editable Installation:**  
 To create an editable installation, you will first need to install Poetry, which the workflow uses as a package builder and dependency manager. The Poetry docs are linked here for reference: [Poetry Docs](https://python-poetry.org/docs/). After installing Poetry, run `poetry self update`. This is the best way to make sure Poetry is up to date before setting up the installation. 
 
