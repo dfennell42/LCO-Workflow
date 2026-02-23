@@ -30,7 +30,7 @@ from .tot_int import get_all_data
 #plot pdos
 from .PDOS_plotter import plot_pdos
 #initialize
-from .intialize import init_settings
+from .initialize import init_settings
 #error check
 from .err_check import err_fix
 #descriptor extraction
