@@ -3,6 +3,8 @@ To install the workflow, follow the instructions in [README.md](README.md). The 
 
 As of right now, the workflow only supports SLURM for job submission. Any commands that submit calculations ***will not work*** with other workload managers. 
 
+#### Note: It's *highly recommended* to run the workflow in a separate environment, to ensure there are as few dependancy conflicts as possible. If using an environment, ensure the environment is active and all dependencies are installed before setting up the workflow. 
+
 ### Setting Up the Workflow:
 To set up the workflow, run `wf init`. This command creates a new directory in the user's home directory called `~/wf-user-files`. The workflow will then copy several files to the directory.
 
