@@ -1,5 +1,4 @@
 import os
-import sys
 import shutil
 # Define element-specific magnetic moments
 
@@ -18,17 +17,29 @@ def read_poscar(filename):
 
     return elements, num_atoms, atom_to_element
 
-def read_spin_pairs(filename):
+def read_spin_pairs(filename, ignore_sym = False):
     spin_pairs = {}
     with open(filename, 'r') as f:
         for line in f:
-            parts = line.strip().split(',')
-            atom1, atom2 = int(parts[0]), int(parts[1])
-            spin = parts[2].strip()
-            spin_pairs[(atom1, atom2)] = spin
+            if not line.strip().startswith('#') and len(line) >1:
+                parts = line.strip().split(',')
+                if ignore_sym == False:
+                    atom1, atom2 = int(parts[0]), int(parts[1])
+                    spin = parts[2].strip()
+                    if '#' in spin:
+                        spin_parts = spin.split('#')
+                        spin = spin_parts[0].strip()
+                    spin_pairs[(atom1, atom2)] = spin
+                elif ignore_sym == True:
+                    idx = int(parts[0])
+                    spin = parts[1].strip()
+                    if '#' in spin:
+                        spin_parts = spin.split('#')
+                        spin = spin_parts[0].strip()
+                    spin_pairs[idx] = spin
     return spin_pairs
 
-def assign_magnetic_moments(atom_to_element, spin_pairs):
+def assign_magnetic_moments(atom_to_element, spin_pairs, ignore_sym = False):
     """
     Assign magnetic moments to atoms based on spin pairs and element type.
     """
@@ -43,18 +54,25 @@ def assign_magnetic_moments(atom_to_element, spin_pairs):
         magnetic_moments.update({f'{x_split[0]}':float(f'{y}')})
         
     magmom = [magnetic_moments.get(element, 0.6) for element in atom_to_element]  # Default all moments
-
-    for (atom1, atom2), spin in spin_pairs.items():
-        moment1 = magnetic_moments.get(atom_to_element[atom1], 0.6)  # Atom1 moment
-        moment2 = magnetic_moments.get(atom_to_element[atom2], 0.6)  # Atom2 moment
-
-        if spin == "up":
-            magmom[atom1] = moment1
-            magmom[atom2] = moment2
-        elif spin == "down":
-            magmom[atom1] = -moment1
-            magmom[atom2] = -moment2
-
+    if ignore_sym == False:
+        for (atom1, atom2), spin in spin_pairs.items():
+            moment1 = magnetic_moments.get(atom_to_element[atom1], 0.6)  # Atom1 moment
+            moment2 = magnetic_moments.get(atom_to_element[atom2], 0.6)  # Atom2 moment
+    
+            if spin == "up":
+                magmom[atom1] = moment1
+                magmom[atom2] = moment2
+            elif spin == "down":
+                magmom[atom1] = -moment1
+                magmom[atom2] = -moment2
+    elif ignore_sym == True:
+        for idx, spin in spin_pairs.items():
+            moment = magnetic_moments.get(atom_to_element[idx],0.6)
+            if spin == 'up':
+                magmom[idx] = moment
+            elif spin == 'down':
+                magmom[idx] = -moment
+    
     return magmom
 
 def generate_magmom_line(elements, num_atoms, magmom):
@@ -86,20 +104,24 @@ def generate_magmom_line(elements, num_atoms, magmom):
 
     return " ".join(magmom_line)
 
-def find_files_recursive(pattern):
+def find_files_recursive(pattern, mod):
     """
     Recursively find files matching the given pattern.
     """
     matched_files = []
     for root, dirs, files in os.walk("."):
         for file in files:
-            if pattern in file:
-                matched_files.append(os.path.join(root, file))
+            if mod != None:
+                if root.endswith(mod) and pattern in file:
+                    matched_files.append(os.path.join(root, file))
+            elif mod == None:
+                if pattern in file:
+                    matched_files.append(os.path.join(root, file))
     return matched_files
 
-def process_poscar_files():
+def process_poscar_files(mod = None, ignore_sym=False):
     # Find all POSCAR files with the pattern POSCAR_modified_*.vasp
-    poscar_files = find_files_recursive("POSCAR_")
+    poscar_files = find_files_recursive("POSCAR_",mod)
     poscar_files = [file for file in poscar_files if file.endswith(".vasp")]
 
     if not poscar_files:
@@ -107,12 +129,17 @@ def process_poscar_files():
         return
 
     print(f"Found {len(poscar_files)} files.")
+    
+    #def spin file
+    if ignore_sym == False:
+        spin_file = "SpinPairs.txt"
+    elif ignore_sym == True:
+        spin_file = 'SpinPairs-HEO.txt'
     #copy SpinPairs file to dir
     userdir = os.path.expanduser('~/wf-user-files')
-    fullpath = os.path.join(userdir, 'SpinPairs.txt')
+    fullpath = os.path.join(userdir, spin_file)
     shutil.copy(fullpath, os.getcwd())
     
-    spin_file = "SpinPairs.txt"
     if not os.path.exists(spin_file):
         print("SpinPairs.txt not found in the directory.")
         return
@@ -122,64 +149,10 @@ def process_poscar_files():
 
         # Read POSCAR and SpinPairs
         elements, num_atoms, atom_to_element = read_poscar(poscar_file)
-        spin_pairs = read_spin_pairs(spin_file)
+        spin_pairs = read_spin_pairs(spin_file, ignore_sym)
 
         # Assign magnetic moments
-        magmom = assign_magnetic_moments(atom_to_element, spin_pairs)
-
-        # Generate MAGMOM line
-        magmom_line = generate_magmom_line(elements, num_atoms, magmom)
-
-        # Write output MAGMOM line to file
-        output_file = f"{poscar_file.replace('.vasp', '_MAGMOM.txt')}"
-        with open(output_file, "w") as f:
-            f.write(f"MAGMOM = {magmom_line}\n")
-        
-        print(f"Generated MAGMOM line saved to {output_file}.")
-        
-def process_pair_mod_files(mod):
-    # Find all POSCAR files with the pattern POSCAR_modified_*.vasp
-    def get_dirs(mod):
-        '''Runs through all directories in base directory and returns list of vacancy/adsorption directories.'''
-        vac_dirs=[]
-        for root, dirs, files in os.walk(os.getcwd()):
-            if root.endswith(mod) and 'INCAR' in os.listdir(root):
-                vac_dirs.append(root)
-        vac_dirs.sort()
-        return vac_dirs
-    vac_dirs = get_dirs(mod)
-    poscar_files = []
-    for vac_dir in vac_dirs:
-        for root, dirs, files in os.walk(vac_dir):
-            for file in files:
-                if "POSCAR_" in file:
-                    poscar_files.append(os.path.join(root, file))
-    poscar_files = [file for file in poscar_files if file.endswith(".vasp")]
-
-    if not poscar_files:
-        print("No POSCAR_*.vasp files found!")
-        return
-
-    print(f"Found {len(poscar_files)} files.")
-    #copy SpinPairs file to dir
-    userdir = os.path.expanduser('~/wf-user-files')
-    fullpath = os.path.join(userdir, 'SpinPairs.txt')
-    shutil.copy(fullpath, os.getcwd())
-    
-    spin_file = "SpinPairs.txt"
-    if not os.path.exists(spin_file):
-        print("SpinPairs.txt not found in the directory.")
-        return
-
-    for poscar_file in poscar_files:
-        print(f"Processing {poscar_file}...")
-
-        # Read POSCAR and SpinPairs
-        elements, num_atoms, atom_to_element = read_poscar(poscar_file)
-        spin_pairs = read_spin_pairs(spin_file)
-
-        # Assign magnetic moments
-        magmom = assign_magnetic_moments(atom_to_element, spin_pairs)
+        magmom = assign_magnetic_moments(atom_to_element, spin_pairs, ignore_sym)
 
         # Generate MAGMOM line
         magmom_line = generate_magmom_line(elements, num_atoms, magmom)

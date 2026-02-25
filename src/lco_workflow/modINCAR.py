@@ -9,7 +9,7 @@ def find_magmom_file(modification_dir):
     return None
 
 # Function to update the INCAR file: delete the existing MAGMOM line and add the new one
-def update_incar_with_magmom(incar_path, magmom_file, comment_ldau=False):
+def update_incar_with_magmom(incar_path, magmom_file, comment_ldau=False, ignore_sym = False):
     with open(incar_path, "r") as incar:
         incar_lines = incar.readlines()
 
@@ -23,7 +23,10 @@ def update_incar_with_magmom(incar_path, magmom_file, comment_ldau=False):
     # If requested, comment out any LDAU lines
     if comment_ldau:
         updated_lines = [f"# {line}" if line.strip().startswith("LDAU") else line for line in updated_lines]
-
+    #If necessary, add ISYM = -1
+    if ignore_sym == True:
+        updated_lines.append('ISYM = -1')
+        
     # Add the new MAGMOM line at the end of the file
     updated_lines.append(f"{magmom_line}\n")
 
@@ -34,7 +37,7 @@ def update_incar_with_magmom(incar_path, magmom_file, comment_ldau=False):
     print(f"Updated MAGMOM in: {incar_path}")
 
 # Function to recursively find INCAR files in VASP_inputs and update them
-def update_incar_files_with_magmom(root_dir, comment_ldau=False):
+def update_incar_files_with_magmom(root_dir, comment_ldau=False, ignore_sym = False):
     # Walk through subdirectories in the ROOT directory
     for subdir, dirs, files in os.walk(root_dir):
         # Check if the subdirectory is a "Modification_#" directory
@@ -47,7 +50,7 @@ def update_incar_files_with_magmom(root_dir, comment_ldau=False):
                         incar_path = os.path.join(vasp_inputs_dir, file)
                         magmom_file = find_magmom_file(subdir)  # Find the _MAGMOM.txt in the current Modification_# directory
                         if magmom_file:
-                            update_incar_with_magmom(incar_path, magmom_file, comment_ldau)
+                            update_incar_with_magmom(incar_path, magmom_file, comment_ldau, ignore_sym)
                         else:
                             print(f"No _MAGMOM.txt file found in {subdir}")
 

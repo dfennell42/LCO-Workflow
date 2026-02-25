@@ -1,5 +1,5 @@
 import os
-from .MagMom_recursive import process_pair_mod_files
+from .MagMom_recursive import process_poscar_files
 
 def read_file(r_dir, file):
     '''Reads given file in directory and returns list of lines'''
@@ -40,10 +40,10 @@ def modify_incar(incar_path, root):
 
     print(f"Updated INCAR in {os.path.dirname(incar_path)}")
 
-def process_pairs_mod_dirs(base_directory,element_name,mod):
+def process_pairs_mod_dirs(base_directory,element_name,mod,ignore_sym=False):
     """Finds all *_Pairs directories and edits their INCAR files."""
     for root, dirs, files in os.walk(base_directory):
         if "INCAR" in files:
             if os.path.basename(root).startswith(f'{element_name}_') and root.endswith(f'_{mod}'):
-                process_pair_mod_files(mod)
+                process_poscar_files(mod,ignore_sym)
                 modify_incar(os.path.join(root, "INCAR"),root)

@@ -1,6 +1,6 @@
 # LCO Modification Workflow CLI
 #### Author: Dorothea Fennell (dfennell1@bnl.gov, dfennell37@gmail.com)
-**Version**: 0.11.0
+**Version**: 0.12.0
 
 ---
 ### Important Note:
@@ -62,6 +62,7 @@ $ wf [OPTIONS] COMMAND [ARGS]...
 
 * `init`: Initializes workflow settings.
 * `modify`: Modifies LCO structure based on user input.
+* `heo`: Generates random modifications for HEO structures...
 * `removepairs`: Removes Li/O pairs from structures
 * `addpairs`: Adds pairs of atoms to structures.
 * `gete`: Gets pristine E and E vac
@@ -98,6 +99,20 @@ Modifies LCO structure based on user input. Needs ModsCo.txt
 
 ```console
 $ wf modify [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `wf heo`
+
+Generates random modifications for HEO structures based on user input, ignoring symmetry.
+
+**Usage**:
+
+```console
+$ wf heo [OPTIONS]
 ```
 
 **Options**:

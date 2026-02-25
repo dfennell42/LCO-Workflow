@@ -12,6 +12,9 @@ from .MagMom_recursive import process_poscar_files
 from .POTCAR_cat import process_directories
 from .VASP_input import generate_vasp_inputs_in_dir
 from .modINCAR import update_incar_files_with_magmom
+#modify heo
+from .gen_random_mods import generate_mods_file
+from .modify_heo import modify_without_sym
 #bash script run-removal
 from .remove_li_o_pairs import process_vasp_inputs
 from .removed_pairs_INCARmod import process_pairs_mod_dirs
@@ -61,7 +64,7 @@ def init():
 def modify():
     '''Modifies LCO structure based on user input. Needs ModsCo.txt '''
     modify_lco()
-    process_poscar_files()
+    process_poscar_files(mod=None,ignore_sym=False)
     process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac = False, add=False)
     generate_vasp_inputs_in_dir(os.getcwd(),custom_incar_params = {
         "ENCUT": 520,
@@ -73,20 +76,39 @@ def modify():
         "LWAVE": False,
         "LCHARG": False,
     })
-    update_incar_files_with_magmom(os.getcwd(),comment_ldau=True)
+    update_incar_files_with_magmom(os.getcwd(),comment_ldau=True,ignore_sym=False)
+
+@app.command()
+def heo():
+    '''Generates random modifications for HEO structures based on user input, ignoring symmetry.'''
+    generate_mods_file()
+    modify_without_sym(os.getcwd())
+    process_poscar_files(mod=None, ignore_sym=True)
+    process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac = False, add=False)
+    generate_vasp_inputs_in_dir(os.getcwd(),custom_incar_params = {
+        "ENCUT": 520,
+        "ISIF": 3,
+        "ISMEAR": 0,
+        "SIGMA": 0.05,
+        "EDIFF": 1e-5,
+        "EDIFFG": -0.02,
+        "LWAVE": False,
+        "LCHARG": False,
+    })
+    update_incar_files_with_magmom(os.getcwd(),comment_ldau=True,ignore_sym=True)
 
 @app.command()
 def removepairs():
     '''Removes Li/O pairs from structures '''
     choice = process_vasp_inputs(os.getcwd())
-    process_pairs_mod_dirs(os.getcwd(),choice, 'Removed')
+    process_pairs_mod_dirs(os.getcwd(),choice, 'Removed', ignore_sym=False)
     process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac = True, add=False)
 
 @app.command()
 def addpairs():
     '''Adds pairs of atoms to structures.'''
     element_name = process_vasp_dirs(os.getcwd())
-    process_pairs_mod_dirs(os.getcwd(), element_name, 'Added')
+    process_pairs_mod_dirs(os.getcwd(), element_name, 'Added',ignore_sym=False)
     process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac=False, add=True)
     
 @app.command()
@@ -116,10 +138,10 @@ def integrate():
     
 @app.command()
 def plot(
-        show:Annotated[bool,typer.Option('--no-show-image','-n',help='Do not display plot in X11 window after running command.',show_default=False)] = True,
+        no_show:Annotated[bool,typer.Option('--no-show-image','-n',help='Do not display plot in X11 window after running command.',show_default=False)] = False,
         ):
     '''Plots PDOS'''
-    plot_pdos(os.getcwd(),show)
+    plot_pdos(os.getcwd(),no_show)
 
 @app.command()
 def extract():
@@ -151,10 +173,10 @@ def submit(
         
 @app.command()
 def check(
-        submit:Annotated[bool,typer.Option("--no-submit","-n",help='Use -n or --no-submit to run check without autosubmitting calculations',show_default=False)] = True
+        no_submit:Annotated[bool,typer.Option("--no-submit","-n",help='Use -n or --no-submit to run check without autosubmitting calculations',show_default=False)] = False
         ):
     '''Checks vasp.out for errors and fixes and resubmits calculations if possible.'''
-    err_fix(os.getcwd(),submit)
+    err_fix(os.getcwd(),no_submit)
 
 @app.command()
 def collect(
