@@ -25,7 +25,7 @@ def update_incar_with_magmom(incar_path, magmom_file, comment_ldau=False, ignore
         updated_lines = [f"# {line}" if line.strip().startswith("LDAU") else line for line in updated_lines]
     #If necessary, add ISYM = -1
     if ignore_sym == True:
-        updated_lines.append('ISYM = -1')
+        updated_lines.append('ISYM = -1\n')
         
     # Add the new MAGMOM line at the end of the file
     updated_lines.append(f"{magmom_line}\n")
