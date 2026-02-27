@@ -30,7 +30,11 @@ def modify_incar(incar_path, pdos_incar_file):
         if line.strip().startswith("MAGMOM"):
             magmom_line = line.strip()
    
-
+    #checks if INCAR contains ISYM = -1
+    for line in incar_lines:
+        if line.strip().startswith('ISYM'):
+            pdos_lines.append(f'\n{line}')
+            
     #adds the magmom line to pdos_lines
     pdos_lines.append(f"\n{magmom_line}")
 

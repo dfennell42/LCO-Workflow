@@ -4,12 +4,14 @@ Author: Dorothea Fennell
 Changelog:
     7-2-25: Created, comments added
     7-7-25: Fixed time_chk so it only checks most recent slurm output
+    2-27-26: Updated to include checking CONTCAR file for correct structure
 """
 #import modules
 import os
 from custodian.vasp.handlers import VaspErrorHandler
 import shutil
 import subprocess as sp
+from .check_contcar import check_contcar
 
 #define functions
 def find_files(base_dir):
@@ -77,6 +79,7 @@ def continue_calc(file):
         with open(f'{dirname}/CONTCAR','r') as c:
             clines = c.readlines()
             if clines:
+                check_contcar(dirname)
                 shutil.copy(os.path.join(dirname,'CONTCAR'),os.path.join(dirname,'POSCAR'))
             elif not clines:
                 print(f'CONTCAR in {dirname} empty. Skipping copying...')

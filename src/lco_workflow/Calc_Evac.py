@@ -14,6 +14,7 @@ Changelog:
 #import modules
 import os
 import sys
+from ase.io import read
 #define functions
 def get_dirs(mod_dir):
     '''Runs through all directories in base directory and returns list of vacancy directories.'''
@@ -33,18 +34,27 @@ def read_file(r_dir, file):
 
 def get_pair_numbers(vac_dir):
     '''Get number of pairs removed.'''
-    pos = read_file(vac_dir,'POSCAR')
-    if pos[5].split()[0].strip()=='Li':
-        li_num = pos[6].split()[0]
-    else:
-        li_num = 0
-    if pos[5].split()[-1].strip()=='O':
-        o_num = pos[6].split()[-1]
-    else:
-        o_num = 0
-    li = 18 - float(li_num)
-    o = (36 - float(o_num))
-    return li, o 
+    pris_dir = os.path.dirname(vac_dir)
+    #pristine
+    pris_atoms = read(os.path.join(pris_dir,'POSCAR'))
+    pf = pris_atoms.symbols.formula
+    p_counts = pf.count()
+    #vacancy
+    vac_atoms = read(os.path.join(vac_dir,'POSCAR'))
+    vf = vac_atoms.symbols.formula
+    v_counts = vf.count()
+    #determine pairs removed
+    ele_vacs = {}
+    for key in p_counts:
+        if key in v_counts:
+            if p_counts.get(key) == v_counts.get(key):
+                pass
+            elif p_counts.get(key) != v_counts.get(key):
+                num = float(p_counts.get(key))- float(v_counts.get(key))
+                ele_vacs.update({f'{key}':num})
+        elif key not in v_counts:
+            ele_vacs.update({f'{key}':p_counts.get(key)})
+    return ele_vacs
 
 def get_e(e_dir):
     '''Gets final energy from OUTCAR file.'''
@@ -88,14 +98,25 @@ def get_all_e(mod_dir,mods,base_dir):
     if not vac_dirs:
         print('No vacancy directories found. Exiting...')
         sys.exit()
+     
+    #check ISYM
+    with open(f'{p}/INCAR','r') as f:
+        lines = f.readlines()
+    
+    for l in lines:
+        if l.strip().startswith('ISYM'):
+            ignore_sym = True
+    #set ignore_sym = False if it doesn't exist
+    if 'ignore_sym' not in locals():
+        ignore_sym = False
     
     mod_name = os.path.basename(mod_dir)
     #gets e_vac for vac dirs
     vac_tot = []
     for vac_dir in vac_dirs:
         vac = get_e(vac_dir)
-        li, o = get_pair_numbers(vac_dir)
-        e_vac = calc_e_vac(e_p,vac,vac_dir,li,o)
+        ele_vacs = get_pair_numbers(vac_dir)
+        e_vac = calc_e_vac(e_p,vac,vac_dir,ele_vacs,ignore_sym)
         pair = os.path.basename(vac_dir).split('_')[1]
         element = os.path.basename(vac_dir).split('_')[0]
         dirname = os.path.dirname(vac_dir)
@@ -103,7 +124,7 @@ def get_all_e(mod_dir,mods,base_dir):
             for i, mod in enumerate(mods,1):
                 if f'Modification_{i}' == f'{mod_name}':
                     mod = mod.strip('-')
-                    vac_tot.append(f'\n{mod_name}/{mod},{element}_{pair},{vac},{e_vac},,{li},{o}')
+                    vac_tot.append(f'\n{mod_name}/{mod},{element}_{pair},{vac},{e_vac},,')
         elif dirname.endswith('Removed'):
             prev_el = os.path.basename(dirname).split('_')[0]
             prev_pair = os.path.basename(dirname).split('_')[1]
@@ -111,23 +132,34 @@ def get_all_e(mod_dir,mods,base_dir):
             prev = get_e(dirname)
             if prev == None:
                 prev = get_ep(base_dir,mod_dir)
-            if os.path.basename(dirname).startswith('O_Pair'):
-                o = 0
-            elif os.path.basename(dirname).startswith('Li_Pair'):
-                li = 0
-            ev_from_prev = calc_e_vac(prev, vac, vac_dir,li,o)
+            ev_from_prev = calc_e_vac(prev, vac, vac_dir,ele_vacs,ignore_sym)
             for i, mod in enumerate(mods,1):
                 if f'Modification_{i}' == f'{mod_name}':
                     mod = mod.strip('-')
-                    vac_tot.append(f'\n{mod_name}/{mod},{prev_el}_{prev_pair}/{element}_{pair},{vac},{e_vac},{ev_from_prev},{li},{o}')
+                    vac_tot.append(f'\n{mod_name}/{mod},{prev_el}_{prev_pair}/{element}_{pair},{vac},{e_vac},{ev_from_prev}')
     
     return vac_tot
-    
-def calc_e_vac(e_p,vac,vac_dir,li,o):
+        
+def calc_e_vac(e_p,vac,vac_dir,ele_vacs,ignore_sym=False):
     '''Calculates vacancy energy'''
-    li_bulk = -1.9072204
-    o2 = -9.03
-    ev = (vac+(li * li_bulk) + (o2 * (o/2)) - e_p)/2
+    userdir = os.path.expanduser('~/wf-user-files')
+    bulk_dict = read_file(userdir, 'BulkE_dict.txt')
+    vacancies=[]
+    for ele in ele_vacs.keys():
+        for i in bulk_dict:
+            if i.startswith(ele):
+                num = float(ele_vacs.get(ele))
+                bulk = float(i.split(':')[1])
+                vac_e = num * bulk
+                vacancies.append(vac_e)
+    if ignore_sym == False:
+        denom = 2
+    elif ignore_sym == True:
+        denom = 1
+    tot_vac = 0
+    for v in vacancies:
+        tot_vac += v
+    ev = (vac+tot_vac - e_p)/denom
     return ev
 
 def sort_data(data):
@@ -177,6 +209,6 @@ def process_e_vac(base_dir):
     e_vac_tot.sort(key=sort_data)
     #write file
     with open(f'{base_dir}/E_vac.csv','w',encoding=None) as f:
-        f.write('Modification,Atom Pair,Total E,E_vac (pristine),E_vac (from prev vacancy),# of Li removed, # of O removed')
+        f.write('Modification,Atom Pair,Total E,E_vac (pristine),E_vac (from prev vacancy)')
         f.writelines(e_vac_tot)
         f.close

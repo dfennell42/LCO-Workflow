@@ -18,8 +18,12 @@ from .modify_heo import modify_without_sym
 #bash script run-removal
 from .remove_li_o_pairs import process_vasp_inputs
 from .removed_pairs_INCARmod import process_pairs_mod_dirs
+#remove atoms
+from .remove_atoms import process_vasp_inputs_nosym
 #add pairs
 from .add_pairs import process_vasp_dirs
+#add atoms
+from .add_atoms import process_vasp_dirs_nosym
 #bash script process data
 from .get_e_pristine import get_all_e
 from .Calc_Evac import process_e_vac
@@ -105,12 +109,26 @@ def removepairs():
     process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac = True, add=False)
 
 @app.command()
+def removeatoms():
+    '''Removes single Li or O atoms, ignoring symmetry.'''
+    choice = process_vasp_inputs_nosym(os.getcwd())
+    process_pairs_mod_dirs(os.getcwd(), choice, 'Removed',ignore_sym= True)
+    process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac = True, add=False)
+
+@app.command()
 def addpairs():
     '''Adds pairs of atoms to structures.'''
     element_name = process_vasp_dirs(os.getcwd())
     process_pairs_mod_dirs(os.getcwd(), element_name, 'Added',ignore_sym=False)
     process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac=False, add=True)
-    
+
+@app.command()
+def addatoms():
+    '''Adds single atoms to structures.'''
+    element_name = process_vasp_dirs_nosym(os.getcwd())
+    process_pairs_mod_dirs(os.getcwd(), element_name, 'Added',ignore_sym=True)
+    process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac=False, add=True)
+
 @app.command()
 def gete():
     '''Gets pristine E and E vac '''

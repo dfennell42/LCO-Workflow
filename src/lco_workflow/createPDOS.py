@@ -5,13 +5,13 @@ Changelog:
     4-23-25: Created, comments added 
     4-30-25: Changed POSCAR to CONTCAR and added a couple lines to rename CONTCAR to POSCAR in new PDOS dir.
     5-7-25: Added ability to set up pdos for pristine or vacancy structures based on user input
+    2-27-26: Added bit to check CONTCAR file in case of broken symmetry causing issues.
 """
 #import modules
 import os
 import shutil
-import sys
-
-
+from .check_contcar import check_contcar
+#define functions
 def copy_vasp_files(source_dir, dest_dir):
     """Copies essential VASP input files from source to destination."""
     os.makedirs(dest_dir, exist_ok=True)  # Ensure the target directory exists
@@ -37,8 +37,9 @@ def create_pdos(input_dir,base_directory):
     # Copy required VASP files
     copy_vasp_files(input_dir, output_dir)
     
-    #Rename CONTCAR to POSCAR
+    #Rename CONTCAR to POSCAR after checking file 
     if os.path.exists(f'{input_dir}/PDOS/CONTCAR'):
+        check_contcar(input_dir)
         os.rename(f'{input_dir}/PDOS/CONTCAR',f'{input_dir}/PDOS/POSCAR')
     
     #Copy PDOS_INCAR.txt file - has to be separate as it is not in Modification_# dir

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Add atoms to supercells.
+Add single atoms while ignoring symmetry
 Author: Dorothea Fennell
-Changelog:
-    1-30-26: Created, comments added. 
+Changelog: 
+    2-26-26: Created, comments added
 """
 #import modules
 from ase.io import read, write
@@ -12,7 +12,6 @@ from ase.build import add_adsorbate, add_vacuum
 import os
 import shutil
 import copy
-import numpy as np
 
 #define functions
 def copy_vasp_files(source_dir, dest_dir):
@@ -29,22 +28,22 @@ def copy_vasp_files(source_dir, dest_dir):
         else:
             print(f"Warning: {file} not found in {source_dir}, skipping.")
 
-def get_pairs(atoms, element):
-    """Identifies inversion pairs for a given element."""
+def get_indices(atoms, element):
+    """Identifies atoms for a given element."""
     indices = [i for i, atom in enumerate(atoms) if atom.symbol == element]
-    return [(indices[i], indices[i + 1]) for i in range(0, len(indices), 2)] if len(indices) % 2 == 0 else []
+    return [indices[i] for i in range(0, len(indices))]
 
-def get_user_selection(pairs, element_name):
-    """Asks the user to select pairs to add atoms to."""
-    print(f"\nAvailable {element_name} pairs:")
-    for idx, pair in enumerate(pairs):
-        print(f"{idx}: {pair}")
+def get_user_selection(indices, element_name):
+    """Asks the user to select atoms to add atoms to."""
+    print(f"\nAvailable {element_name} indices:")
+    for idx in indices:
+        print(f"{idx}")
     
-    print('Please note, only one new atom is added to each half of the pair. If you would like to attach multiple new atoms to the same pairs, you must run this command multiple times.')
-    pair_indices = input(f"Enter the indices of {element_name} pairs to attach the new atoms to (comma-separated): ")
-    return [int(idx) for idx in pair_indices.split(',') if idx.isdigit()]
+    print('Please note, only one new atom is added to each site. If you would like to attach multiple new atoms to the same site, you must run this command multiple times.')
+    sel_indices = input(f"Enter the indices of {element_name} atoms to attach the new atoms to (comma-separated): ")
+    return [int(idx) for idx in sel_indices.split(',') if idx.isdigit()]
 
-def add_pairs(atoms, pairs, species, offset, selected_indices):
+def add_atoms(atoms, indices, species, offset, selected_indices):
     '''Adds new atoms to the structure.'''
     #create structure to be modified and add vacuum to allow for new atoms
     mod_atoms = copy.deepcopy(atoms)
@@ -53,40 +52,35 @@ def add_pairs(atoms, pairs, species, offset, selected_indices):
     #set offset
     ols = offset.split(',')
     offtup = tuple((float(ols[0]),float(ols[1])))
+
+    #center atoms about 0 to determine the height from the surface
+    mod_atoms.center(about=(0.,0.,0.,))
+    #add adsorbate
+    for idx in selected_indices:
+        a = mod_atoms[idx]
+        if a.z > 0:
+            a_h = 2
+        elif a.z < 0:
+            a_h = -2
+        add_adsorbate(mod_atoms,species,a_h,(a.x,a.y),offset=offtup)
     
-    #mod structure
-    for pair_index in selected_indices:
-        if pair_index < len(pairs):
-            idx1, idx2 = pairs[pair_index]
-            a1 = atoms[idx1]
-            a2 = atoms[idx2]
-            #determine which atom is higher.
-            pos = np.stack((a1.position,a2.position))
-            z_max = pos[:,2].argmax()
-            if a1.z == pos[z_max,2]:
-                a1_h = 2
-                a2_h = -a1.z - 2
-            elif a2.z == pos[z_max,2]:
-                a1_h = -a2.z - 2
-                a2_h = 2
-            #add atom to a1
-            add_adsorbate(mod_atoms,species,a1_h,(a1.x,a1.y),offset=offtup)
-            #add atom to a2
-            add_adsorbate(mod_atoms,species,a2_h,(a2.x,a2.y),offset=offtup)
+    #recenter cell
+    mod_atoms.center()
+    
     return mod_atoms
 
-def process_addition(vasp_dir, pairs, species, offset, selected_indices):
-    """Creates POSCAR files with added pairs, saves it, and copies it to new directory along with required files."""
+def process_addition(vasp_dir, indices, species, offset, selected_indices):
+    """Creates POSCAR files with added atoms, saves it, and copies it to new directory along with required files."""
     print(f"\nProcessing: {vasp_dir}")
     
     #get poscar
     poscar_path = os.path.join(vasp_dir, "POSCAR")
     atoms = read(poscar_path)
     #modify poscar
-    mod_atoms = add_pairs(atoms, pairs,species,offset, selected_indices)
+    mod_atoms = add_atoms(atoms,indices,species,offset, selected_indices)
     
     # Save the modified POSCAR
-    output_dir = os.path.join(vasp_dir, f'{species}_Pairs_Added')
+    output_dir = os.path.join(vasp_dir, f'{species}_Atoms_Added')
     os.makedirs(output_dir, exist_ok=True)
     output_file = os.path.join(output_dir, f"POSCAR_added_{species}.vasp")
     write(output_file, mod_atoms, format="vasp")
@@ -100,7 +94,7 @@ def process_addition(vasp_dir, pairs, species, offset, selected_indices):
     # Copy required VASP files
     copy_vasp_files(vasp_dir, output_dir)
 
-def process_vasp_dirs(base_dir):
+def process_vasp_dirs_nosym(base_dir):
     """Processes all VASP_inputs directories recursively, applying the same modifications to each."""
     all_dirs = []
 
@@ -114,7 +108,7 @@ def process_vasp_dirs(base_dir):
         return
     
     #ask user which structures they want to add to
-    print("\nWould you like to add pairs to pristine, vacancy, or adsorption structures?")
+    print("\nWould you like to add atoms to pristine, vacancy, or adsorption structures?")
     print("1: Pristine")
     print("2: Vacancy")
     print("3: Adsorption")
@@ -149,8 +143,8 @@ def process_vasp_dirs(base_dir):
     for i,element in enumerate(species_list,1):
         if float(choice) == i:
             element_name = element.split('_')[0].capitalize()
-            pairs = get_pairs(atoms, element_name)
-            selected_indices = get_user_selection(pairs, element_name)
+            indices = get_indices(atoms, element_name)
+            selected_indices = get_user_selection(indices, element_name)
     
     #Ask user for species of new atoms
     print('\nWhat element would you like the new atoms to be?')
@@ -160,8 +154,7 @@ def process_vasp_dirs(base_dir):
     print('\nPlease enter the X & Y offset for the new atoms, in number of unit cells. Default is 0,0. If entering an offset, please enter both numbers, even if one is zero.')
     offset = input('Enter the offset (comma separated): ')
     
-    
     for vasp_dir in vasp_dirs:
-        process_addition(vasp_dir, pairs, species, offset, selected_indices)
+        process_addition(vasp_dir, indices, species, offset, selected_indices)
    
     return element_name
