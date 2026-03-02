@@ -10,6 +10,8 @@ Changelog:
             e-vac from pristine structure and from previous structure
     5-30-25: Modified get_pair_numbers in case of 0 Li or O. 
     7-9-25: Modified to sort by pair removed then by modification directory number, with sorting dir number by int rather than string to avoid 10 coming before 2. 
+    2-26-26: Modified to add option to ignore symmetry. 
+    3-2-26: Moved ignore_sym check so it can pull the right mods file. 
 """
 #import modules
 import os
@@ -83,7 +85,7 @@ def get_ep(base_dir,mod_dir):
         print('Exiting...')
         sys.exit()
         
-def get_all_e(mod_dir,mods,base_dir):
+def get_all_e(mod_dir,mods,base_dir,ignore_sym=False):
     '''Gets total energy of pristine and vacancy surfaces.Returns list of vacancy energies.'''
     #get total energy of pristine surface
     p = os.path.join(mod_dir,'VASP_inputs/')
@@ -99,17 +101,6 @@ def get_all_e(mod_dir,mods,base_dir):
         print('No vacancy directories found. Exiting...')
         sys.exit()
      
-    #check ISYM
-    with open(f'{p}/INCAR','r') as f:
-        lines = f.readlines()
-    
-    for l in lines:
-        if l.strip().startswith('ISYM'):
-            ignore_sym = True
-    #set ignore_sym = False if it doesn't exist
-    if 'ignore_sym' not in locals():
-        ignore_sym = False
-    
     mod_name = os.path.basename(mod_dir)
     #gets e_vac for vac dirs
     vac_tot = []
@@ -182,8 +173,24 @@ def process_e_vac(base_dir):
         print('No modification directories found.')
         return
     
+    #check ISYM
+    with open(f'{mod_dirs[0]}/VASP_inputs/INCAR','r') as f:
+        lines = f.readlines()
+    
+    for l in lines:
+        if l.strip().startswith('ISYM'):
+            ignore_sym = True
+    #set ignore_sym = False if it doesn't exist
+    if 'ignore_sym' not in locals():
+        ignore_sym = False
+    
+    #mods file name
+    if ignore_sym == True:
+        mod_file = 'ModsIdx.txt'
+    else:
+        mod_file = 'ModsCo.txt'
     #get modifications from ModsCo.txt
-    mods = read_file(base_dir, 'ModsCo.txt')
+    mods = read_file(base_dir, mod_file)
     #convert the commas to dashes so the csv won't separate incorrectly
     mods_str = []
     for m in mods:
@@ -197,7 +204,7 @@ def process_e_vac(base_dir):
     #Calculate E_vac in each modification directory in 
     e_vac_tot = []
     for mod_dir in mod_dirs:
-        ev = get_all_e(mod_dir,mods,base_dir)
+        ev = get_all_e(mod_dir,mods,base_dir,ignore_sym)
         for e in ev:
             e_vac_tot.append(e)
     

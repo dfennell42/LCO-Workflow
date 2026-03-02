@@ -4,6 +4,7 @@ Author: Dorothea Fennell
 Changelog:
     5-14-25: Created, comments added.
     7-9-25: Modified to sort by modification directory number, with sorting dir number by int rather than string to avoid 10 coming before 2. 
+    3-2-26: Modified to check ISYM
 """
 #import modules
 import os
@@ -50,8 +51,24 @@ def get_all_e(base_dir):
         print('No modification directories found.')
         return
     
+    #check ISYM
+    with open(f'{mod_dirs[0]}/VASP_inputs/INCAR','r') as f:
+        lines = f.readlines()
+    
+    for l in lines:
+        if l.strip().startswith('ISYM'):
+            ignore_sym = True
+    #set ignore_sym = False if it doesn't exist
+    if 'ignore_sym' not in locals():
+        ignore_sym = False
+    
+    #mods file name
+    if ignore_sym == True:
+        mod_file = 'ModsIdx.txt'
+    else:
+        mod_file = 'ModsCo.txt'
     #get modifications from ModsCo.txt
-    mods = read_file(base_dir, 'ModsCo.txt')
+    mods = read_file(base_dir, mod_file)
     #convert the commas to dashes so the csv won't separate incorrectly
     mods_str = []
     for m in mods:

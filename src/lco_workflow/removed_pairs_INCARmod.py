@@ -15,7 +15,7 @@ def find_magmom_file(modification_dir):
             return os.path.join(modification_dir, file)
     return None
 
-def modify_incar(incar_path, root):
+def modify_incar(incar_path, root, ignore_sym):
     """Edits the MAGMOM line in INCAR based on the modification type."""
     with open(incar_path, "r") as f:
         lines = f.readlines()
@@ -27,7 +27,13 @@ def modify_incar(incar_path, root):
     
     with open(magmom_file, "r") as magmom:
         magmom_line = magmom.read().strip()
- 
+    
+    #check for ISYM
+    if ignore_sym == True:
+        isym = [line for line in lines if 'ISYM' in line]
+        if not isym:
+            lines.append('ISYM = -1\n')
+    
     modified_lines = []
     for line in lines:
         if line.strip().startswith("MAGMOM"):
@@ -46,4 +52,4 @@ def process_pairs_mod_dirs(base_directory,element_name,mod,ignore_sym=False):
         if "INCAR" in files:
             if os.path.basename(root).startswith(f'{element_name}_') and root.endswith(f'_{mod}'):
                 process_poscar_files(mod,ignore_sym)
-                modify_incar(os.path.join(root, "INCAR"),root)
+                modify_incar(os.path.join(root, "INCAR"),root,ignore_sym)
