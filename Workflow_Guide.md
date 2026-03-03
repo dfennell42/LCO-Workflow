@@ -81,7 +81,7 @@ Where E<sub>vac</sub> is the vacancy energy, E<sub>vs</sub> is the ground-state 
 
 Similarly, the adsorption energy is calculated as follows:
 
-$$E_{ads}=(E_{as}-N_a*E_a)-E_{pris}$$
+$$E_{ads}=E_{as}-N_a*E_a-E_{pris}$$
 
 E<sub>ads</sub> is the adsorption energy, E<sub>as</sub> is the ground-state energy of the adsorption structure, N<sub>a</sub> is the number of atoms added, E<sub>a</sub> is the ground-state energy of a single atom in the bulk of the added species, and E<sub>pris</sub> is the ground-state energy of the pristine structure. All energies are given in eV.
 
