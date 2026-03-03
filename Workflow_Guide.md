@@ -3,7 +3,8 @@ To install the workflow, follow the instructions in [README.md](README.md). The 
 
 As of right now, the workflow only supports SLURM for job submission. Any commands that submit calculations ***will not work*** with other workload managers. 
 
-#### Note: It's *highly recommended* to run the workflow in a separate environment, to ensure there are as few dependancy conflicts as possible. If using an environment, ensure the environment is active and all dependencies are installed before setting up the workflow. 
+#### Note:
+It's recommended to run the workflow in a separate environment, to ensure there are as few dependancy conflicts as possible. If using an environment, ensure the environment is active and all dependencies are installed before setting up the workflow. 
 
 ### Setting Up the Workflow:
 To set up the workflow, run `wf init`. This command creates a new directory in the user's home directory called `~/wf-user-files`. The workflow will then copy several files to the directory.
@@ -16,7 +17,7 @@ If running the Delafossite workflow, the command will also ask you to provide th
 
 ### Preparing to Run Calculations:
 Before running any calculations, a series of files must be provided by the user. These are as follows:
-1. A base POSCAR file that is **inversion symmetric**. This is important not only for reducing calculation time, but all structural modifications made by the workflow are *done in pairs.*
+1. A base POSCAR file, preferably **inversion symmetric**. While the workflow *can* now modify the structure while ignoring symmetry, it's not recommended as it greatly increases calculation time. 
 2. A file denoting the spin pairs of the cell, titled “SpinPairs.txt”. This is necessary due to the antiferromagnetic ordering of LCO and delafossites, and allows the calculations to run spin polarized. 
 3. A submission script to submit the calculations to the SLURM job queue, ***titled vasp.sh***. The file must be titled "vasp.sh" or the submission command ***will not*** work. 
 
@@ -37,8 +38,18 @@ Each line creates a modification directory. If there are blank lines in the file
 If running the LCO workflow, the file must be titled **"ModsCo.txt"**.  
 If running the Delafossite workflow, the file must be titled **"Mods.txt"**. 
 
-If you're not certain of the pair indices, create a blank mods file, then run command `wf modify` which will generate text files listing the atom pairs. 
+If you're not certain of the pair indices, create a blank mods file, then run command `wf modify` which will generate text files listing the atom pairs.
 
+#### A Note on Symmetry:
+It is possible to use the workflow to set up structures that are not inversion symmetric, but the required files are in slightly different formats and in certain cases, the workflow uses slightly different commands, so proceed with caution. It is also worth noting that running the calculations without symmetry will greatly increase calculation time. 
+
+For setting up calculations, the Mods file should be titled **"ModsIdx.txt"**, and list the ***atom*** indices (not the pair indices) followed by the replacement species. (See the Mods File section above).  
+The file containing the spin pairs should instead contain the spin for each atom, and should be titled **"SpinIdx.txt"**. An example file is provided in the user's `~/wf-user-files/example-files` directory.  
+
+When modifying structures, use command `wf modify` with option `--ignore-symmetry` or `-i`. This will look specifically for the ModsIdx.txt file and modify the structure accordingly.  
+If removing or adding atoms while ignoring symmetry, use commands `wf removeatoms` and `wf addatoms` respectively. This will remove or add *single* atoms rather than pairs. 
+
+Finally, all calculations which require optimization calculations to be completed first, i.e. PDOS and band structure calculations, will also ignore symmetry when run. Again, this will *greatly* increases calculation time, so be cautious. 
 #### Modifying Structures:
 Following the creation of the Mods file, run command `wf modify`. The LCO workflow will automatically modify the Co atoms, while the Delafossite version will prompt the user as to which element pairs they want to replace. The workflow will create a new directory for each modification, titled `/Modification_{#}` where {#} is replaced by the line number in the Mods file. It then modifies the base POSCAR using Atomic Simulation Environment (ASE) and generates the VASP input files using Pymatgen in subdirectory `/VASP_inputs`. 
 
@@ -59,8 +70,8 @@ The workflow will also fix certain errors. For cancelation, timeout, 'ZBRENT', o
 
 If no errors are found, the workflow will return "No errors found. All calculations complete.”
 
-### Calculating Vacancy Energies:
-Following structural optimization, the user can execute command `wf gete`. This command extracts the ground-state energies from the output files and produces two CSV files: "E_pris.csv" and "E_vac.csv". The first contains the modification directory, the modification (as read from the Mods file), and the ground-state energies (eV) of the pristine structures. The second contains the modification directory, the modification, which species was removed, the number of atoms removed, the ground-state energy, and the vacancy energy (eV) of all vacancy structures. If the vacancy in question is a secondary vacancy (i.e. an oxygen vacancy following a lithium vacancy) the workflow calculates the vacancy energy from the previous vacancy structure rather than the pristine surface. 
+### Calculating Vacancy or Adsorption Energies:
+Following structural optimization, the user can execute command `wf gete`. This command extracts the ground-state energies from the output files and produces up to three CSV files: "E_pris.csv", "E_vac.csv", and "E_ads.csv". The first contains the modification directory, the modification (as read from the Mods file), and the ground-state energies (eV) of the pristine structures. The second and third contain the modification directory, the modification, which species was removed, the number of atoms removed, the ground-state energy, and the vacancy/adsorption energy (eV) of all vacancy or adsorption structures. If the vacancy or adsorption in question is a secondary change (i.e. an oxygen vacancy following a lithium vacancy) the workflow calculates the energy from the previous vacancy or adsorption structure rather than the pristine surface. 
 
 The vacancy energy is calculated as follows:
 
@@ -68,7 +79,13 @@ $$E_{vac}=(E_{vs}+N_a*E_a)-E_{pris}$$
 
 Where E<sub>vac</sub> is the vacancy energy, E<sub>vs</sub> is the ground-state energy of the vacancy structure, N<sub>a</sub> is the number of atoms removed, E<sub>a</sub> is the ground-state energy of a single atom in the bulk of the removed species, and E<sub>pris</sub> is the ground-state energy of the pristine structure. All energies are given in eV. 
 
-***Important Note:*** *While atoms are removed in pairs due to the cell's inversion symmetry, all vacancy energies are reported **<ins>per atom.</ins>***
+Similarly, the adsorption energy is calculated as follows:
+
+$$E_{ads}=(E_{as}-N_a*E_a)-E_{pris}$$
+
+E<sub>ads</sub> is the adsorption energy, E<sub>as</sub> is the ground-state energy of the adsorption structure, N<sub>a</sub> is the number of atoms added, E<sub>a</sub> is the ground-state energy of a single atom in the bulk of the added species, and E<sub>pris</sub> is the ground-state energy of the pristine structure. All energies are given in eV.
+
+***Important Note:*** *While atoms are removed in pairs due to the cell's inversion symmetry, all energies are reported **<ins>per atom.</ins>**, regardless of symmetry.*
 
 ### PDOS Calculations:
 Once the structural optimizatons are complete, the user can then set up PDOS calculations by executing command `wf pdos`. The workflow will prompt the user on whether to set PDOS up for the pristine or vacancy structures. Following the user's choice, the workflow will create a new subdirectory in the appropriate location, titled `./PDOS`. It will then copy the appropriate input files to the directory, using the CONTCAR from the optimization calculations as POSCAR, and modify INCAR based on "PDOS_INCAR.txt". 

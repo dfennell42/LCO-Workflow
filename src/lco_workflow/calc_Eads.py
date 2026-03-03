@@ -139,7 +139,7 @@ def get_all_e(mod_dir,mods,base_dir,ignore_sym=False):
                 if f'Modification_{i}' == f'{mod_name}':
                     mod = mod.strip('-')
                     ads_tot.append(f'\n{mod_name}/{mod},{element}_{pair},{ads},{e_ads},,')
-        elif dirname.endswith('Removed') or dirname.endswith('adsed'):
+        elif dirname.endswith('Removed') or dirname.endswith('Added'):
             prev_el = os.path.basename(dirname).split('_')[0]
             prev_pair = os.path.basename(dirname).split('_')[1]
             #get eads relative to previous structure 
