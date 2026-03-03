@@ -1,6 +1,6 @@
 # LCO Modification Workflow CLI
 #### Author: Dorothea Fennell (dfennell1@bnl.gov, dfennell37@gmail.com)
-**Version**: 0.12.1
+**Version**: 0.12.2
 
 ---
 ### Important Note:
@@ -70,7 +70,7 @@ $ wf [OPTIONS] COMMAND [ARGS]...
 * `removeatoms`: Removes single Li or O atoms, ignoring...
 * `addpairs`: Adds pairs of atoms to structures.
 * `addatoms`: Adds single atoms to structures.
-* `gete`: Gets pristine E and E vac
+* `gete`: Gets pristine E. E_vac, and E_ads.
 * `pdos`: sets up PDOS calculations
 * `parse`: Parses PDOS data into individual files and...
 * `integrate`: Integrates the PDOS files.
@@ -182,7 +182,7 @@ $ wf addatoms [OPTIONS]
 
 ## `wf gete`
 
-Gets pristine E and E vac
+Gets pristine E, E_vac, and E_ads.
 
 **Usage**:
 

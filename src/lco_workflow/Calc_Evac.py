@@ -85,7 +85,7 @@ def get_ep(base_dir,mod_dir):
         print('Exiting...')
         sys.exit()
         
-def get_all_e(mod_dir,mods,base_dir,ignore_sym=False):
+def get_all_e(mod_dir,mods,base_dir):
     '''Gets total energy of pristine and vacancy surfaces.Returns list of vacancy energies.'''
     #get total energy of pristine surface
     p = os.path.join(mod_dir,'VASP_inputs/')
@@ -107,7 +107,7 @@ def get_all_e(mod_dir,mods,base_dir,ignore_sym=False):
     for vac_dir in vac_dirs:
         vac = get_e(vac_dir)
         ele_vacs = get_pair_numbers(vac_dir)
-        e_vac = calc_e_vac(e_p,vac,vac_dir,ele_vacs,ignore_sym)
+        e_vac = calc_e_vac(e_p,vac,vac_dir,ele_vacs)
         pair = os.path.basename(vac_dir).split('_')[1]
         element = os.path.basename(vac_dir).split('_')[0]
         dirname = os.path.dirname(vac_dir)
@@ -123,7 +123,7 @@ def get_all_e(mod_dir,mods,base_dir,ignore_sym=False):
             prev = get_e(dirname)
             if prev == None:
                 prev = get_ep(base_dir,mod_dir)
-            ev_from_prev = calc_e_vac(prev, vac, vac_dir,ele_vacs,ignore_sym)
+            ev_from_prev = calc_e_vac(prev, vac, vac_dir,ele_vacs)
             for i, mod in enumerate(mods,1):
                 if f'Modification_{i}' == f'{mod_name}':
                     mod = mod.strip('-')
@@ -131,7 +131,7 @@ def get_all_e(mod_dir,mods,base_dir,ignore_sym=False):
     
     return vac_tot
         
-def calc_e_vac(e_p,vac,vac_dir,ele_vacs,ignore_sym=False):
+def calc_e_vac(e_p,vac,vac_dir,ele_vacs):
     '''Calculates vacancy energy'''
     userdir = os.path.expanduser('~/wf-user-files')
     bulk_dict = read_file(userdir, 'BulkE_dict.txt')
@@ -142,15 +142,13 @@ def calc_e_vac(e_p,vac,vac_dir,ele_vacs,ignore_sym=False):
                 num = float(ele_vacs.get(ele))
                 bulk = float(i.split(':')[1])
                 vac_e = num * bulk
-                vacancies.append(vac_e)
-    if ignore_sym == False:
-        denom = 2
-    elif ignore_sym == True:
-        denom = 1
+                vacancies.append((vac_e,num))
     tot_vac = 0
-    for v in vacancies:
+    tot_num = 0
+    for (v,n) in vacancies:
         tot_vac += v
-    ev = (vac+tot_vac - e_p)/denom
+        tot_num += n
+    ev = (vac+tot_vac - e_p)/tot_num
     return ev
 
 def sort_data(data):
@@ -204,7 +202,7 @@ def process_e_vac(base_dir):
     #Calculate E_vac in each modification directory in 
     e_vac_tot = []
     for mod_dir in mod_dirs:
-        ev = get_all_e(mod_dir,mods,base_dir,ignore_sym)
+        ev = get_all_e(mod_dir,mods,base_dir)
         for e in ev:
             e_vac_tot.append(e)
     

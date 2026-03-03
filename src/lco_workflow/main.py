@@ -27,6 +27,7 @@ from .add_atoms import process_vasp_dirs_nosym
 #bash script process data
 from .get_e_pristine import get_all_e
 from .Calc_Evac import process_e_vac
+from .calc_Eads import process_e_ads
 #bash script run pdos
 from .createPDOS import process_vasp_inputs as pdos_vasp_inputs
 from .pdos_INCARmod import process_pdos_dirs
@@ -131,9 +132,10 @@ def addatoms():
 
 @app.command()
 def gete():
-    '''Gets pristine E and E vac '''
+    '''Gets pristine E, E_vac, and E_ads '''
     get_all_e(os.getcwd())
     process_e_vac(os.getcwd())
+    process_e_ads(os.getcwd())
     
 @app.command()
 def pdos():
