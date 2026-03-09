@@ -13,9 +13,10 @@ Changelog:
     2-3-26: Added std. reduction potential descriptor. Added avg_ion_e to function getting ionization energy. Added section to calculate
             average band centers & widths for LCE.Also added section to get calculated # of electrons for new potential descriptor. 
             Added func to calculate electron and avg pdos intensity weighted descriptors. 
+    3-6-26: Added section to calculate Vo, Vm, Vo-m, & Eoxm. 
 """
 #import modules
-from pymatgen.io.vasp import Vasprun
+from pymatgen.io.vasp import Vasprun, Outcar
 from pymatgen.electronic_structure.core import OrbitalType, Spin
 import os
 from ase.io import read
@@ -44,19 +45,19 @@ def get_dirs(base_dir, ask = True):
         print("2: Vacancy")
         print("3: Adsorption")
         struc = input("Enter the number of your choice: ")
-    if struc == '1':
-        base = 'VASP_inputs'
-    elif struc == '2':
-        base = '_Removed'
-    elif struc == '3':
-        base = '_Added'
+        if struc == '1':
+            base = 'VASP_inputs/PDOS'
+        elif struc == '2':
+            base = '_Removed/PDOS'
+        elif struc == '3':
+            base = '_Added/PDOS'
     elif ask == False:
-        base = ''
+        base = 'PDOS'
         
     for root, dirs, files in os.walk(base_dir):
-        if root.endswith(f"{base}/PDOS") and 'integrated-pdos.csv' in files:
+        if root.endswith(base) and 'integrated-pdos.csv' in files:
             pdos_dirs.append(root)
-        elif root.endswith(f"{base}/PDOS") and "integrated-pdos.csv" not in files:
+        elif root.endswith(base) and "integrated-pdos.csv" not in files:
             print("PDOS calculations haven't been integrated yet.")
     def sort_dirs(data):
         path_list = data.split('/')
@@ -529,10 +530,43 @@ def get_wtd_desc(m_idxs,pdos_weights,elec_data,bc_ser):
     wtd_ser = pd.Series(wtd_desc)
     return wtd_ser
 
+def get_vs(opt_dir,m_idxs,o_idx,elec_data,bl_ser):
+    '''Gets Vm, Vo, Vm-o, Eoxm, and wtd Vm & Vo'''
+    outcar = Outcar(f'{opt_dir}/OUTCAR')
+    charges = outcar.charge
+    v_data = {}
+    tot_e = 0
+    #get o chg
+    o_dict = charges[o_idx]
+    o_chg = o_dict['tot']
+    #set up v
+    vm = 0
+    vm_sum = 0
+    vo = 0
+    vo_sum = 0
+    vmo = 0
+    eoxm = 0
+    #get charges for metals
+    for i in m_idxs:
+        i_dict = charges[i]
+        chg = i_dict['tot']
+        elec = elec_data[f'{i}_elec']
+        tot_e += elec
+        bl = bl_ser.at[f'O_M{i}']
+        vm += (chg/bl)
+        vm_sum += ((chg/bl)*elec)
+        vo += (o_chg/bl)
+        vo_sum += ((o_chg/bl)*elec)
+        vmo += ((o_chg - chg)/bl)
+        eoxm += ((o_chg*chg)/bl)
+    v_data.update({'Vm':vm,'Vo':vo,'Vm-o':vmo,'Eoxm':eoxm,'wtd_Vm':(vm_sum/tot_e),'wtd_Vo':(vo_sum/tot_e)})
+    v_ser = pd.Series(v_data)
+    return v_ser
+
 def extract_desc(base_dir,ask=True):
     '''Extract descriptors.'''
     #get directories
-    pdos_dirs = get_dirs(base_dir,ask=True)
+    pdos_dirs = get_dirs(base_dir,ask)
     
     if not pdos_dirs:
         print('No PDOS directories found. Exiting...')
@@ -572,6 +606,8 @@ def extract_desc(base_dir,ask=True):
                 eln = get_eln(atoms,m_idxs)
                 #get bond lengths
                 bl_ser = bond_lengths(atoms, o_idx, m_idxs)
+                #get Vm, Vo, Vm-o, & Eoxm
+                v_ser = get_vs(opt_dir,m_idxs,o_idx,elec_data,bl_ser)
                 #get vasprun for form energy, band gap, band center and t2g/eg dos
                 #use optimization for form_en & band gap, pdos for band center & t2g/eg 
                 opt_vpr = Vasprun(os.path.join(opt_dir,'vasprun.xml'))
@@ -602,7 +638,7 @@ def extract_desc(base_dir,ask=True):
                 #create pandas series with modification and single value returns
                 e_ser = pd.Series(data={'Modification':mod,'E_form':form_en,'E_fermi':fermi,'E_bg':bg_e,'VBM':vbm,'CBM':cbm,'Lix':lix})
                 #concatenate all series
-                mod_ser = pd.concat([e_ser,pdos_data,bl_ser,eln,bc_ser,t2g_eg,ion_pol_ser,bin_evac_ser,avg_bc,std_pot_ser,pdos_weights_ser,wtd_ser])
+                mod_ser = pd.concat([e_ser,pdos_data,bl_ser,v_ser,eln,bc_ser,t2g_eg,ion_pol_ser,bin_evac_ser,avg_bc,std_pot_ser,pdos_weights_ser,wtd_ser])
                 #append series to list
                 mod_data_list.append(mod_ser)
     

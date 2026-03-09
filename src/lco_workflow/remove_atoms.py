@@ -5,6 +5,7 @@ Remove Li or O atoms while ignoring symmetry
 Author: Dorothea Fennell
 Changelog: 
     2-26-26: Created, comments added
+    3-9-26: Updated to read sample POSCAR from head dir and pull POSCAR_modified_*.vasp if ASE can't read POSCAR.
 """
 #import modules
 import os
@@ -55,7 +56,15 @@ def process_removal(vasp_dir,indices,selected_indices, element_name):
     print(f"\nProcessing: {vasp_dir}")
 
     poscar_path = os.path.join(vasp_dir, "POSCAR")
-    atoms = read(poscar_path)
+    #add fix for ase not reading poscar
+    try:
+        atoms = read(poscar_path)
+    except:
+        mod_dir = os.path.dirname(vasp_dir)
+        for file in os.listdir(mod_dir):
+            if file.startswith('POSCAR') and file.endswith('.vasp'):
+                new_poscar = file
+        atoms = read(f'{mod_dir}/{new_poscar}')
     modified_atoms = remove_selected_atoms(atoms, indices, selected_indices)
     name = f'{element_name}_Atoms'
 
@@ -107,7 +116,7 @@ def process_vasp_inputs_nosym(base_directory):
                 vasp_dirs.append(i)
                 
     # Use the first POSCAR to get the pairs and user selection
-    sample_poscar = os.path.join(vasp_dirs[0], "POSCAR")
+    sample_poscar = os.path.join(base_directory, "POSCAR")
     atoms = read(sample_poscar)
 
     # Identify Li and O pairs

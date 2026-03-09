@@ -5,6 +5,7 @@ Add single atoms while ignoring symmetry
 Author: Dorothea Fennell
 Changelog: 
     2-26-26: Created, comments added
+    3-9-26: Added section to pull POSCAR from POSCAR_modified_*.vasp file if ASE can't read POSCAR.
 """
 #import modules
 from ase.io import read, write
@@ -75,7 +76,15 @@ def process_addition(vasp_dir, indices, species, offset, selected_indices):
     
     #get poscar
     poscar_path = os.path.join(vasp_dir, "POSCAR")
-    atoms = read(poscar_path)
+    #add fix for ase not reading poscar
+    try:
+        atoms = read(poscar_path)
+    except:
+        mod_dir = os.path.dirname(vasp_dir)
+        for file in os.listdir(mod_dir):
+            if file.startswith('POSCAR') and file.endswith('.vasp'):
+                new_poscar = file
+        atoms = read(f'{mod_dir}/{new_poscar}')
     #modify poscar
     mod_atoms = add_atoms(atoms,indices,species,offset, selected_indices)
     
