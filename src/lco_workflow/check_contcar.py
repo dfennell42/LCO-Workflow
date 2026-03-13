@@ -42,7 +42,8 @@ def check_contcar(mod_dir):
     plines = get_lines(mod_dir,'POSCAR')
     
     #check CONTCAR
-    if clines[6].isnumeric():
+    line = clines[6].strip().split()
+    if line[0].isnumeric():
         return
     else:
         new_lines = fix_contcar(clines, plines)
