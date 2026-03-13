@@ -105,15 +105,15 @@ def heo():
 @app.command()
 def removepairs():
     '''Removes Li/O pairs from structures '''
-    choice = process_vasp_inputs(os.getcwd())
-    process_pairs_mod_dirs(os.getcwd(),choice, 'Removed', ignore_sym=False)
+    element_name = process_vasp_inputs(os.getcwd())
+    process_pairs_mod_dirs(os.getcwd(),element_name, 'Removed', ignore_sym=False)
     process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac = True, add=False)
 
 @app.command()
 def removeatoms():
     '''Removes single Li or O atoms, ignoring symmetry.'''
-    choice = process_vasp_inputs_nosym(os.getcwd())
-    process_pairs_mod_dirs(os.getcwd(), choice, 'Removed',ignore_sym= True)
+    element_name = process_vasp_inputs_nosym(os.getcwd())
+    process_pairs_mod_dirs(os.getcwd(), element_name, 'Removed',ignore_sym= True)
     process_directories("/hpcgpfs01/ic2software/vasp6/6.4.2/PSEUDOPOTENTIAL/PBE/", vac = True, add=False)
 
 @app.command()

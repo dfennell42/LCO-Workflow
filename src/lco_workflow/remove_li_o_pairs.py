@@ -150,4 +150,4 @@ def process_vasp_inputs(base_directory):
             for i,index in enumerate(selected_indices):
                 process_removal(vasp_dir,pairs,selected_indices,removal_choice, element_name,i,index)
       
-    return choice
+    return element_name

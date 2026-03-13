@@ -145,5 +145,5 @@ def process_vasp_inputs_nosym(base_directory):
     for vasp_dir in vasp_dirs:
         process_removal(vasp_dir,indices,selected_indices,element_name)
     
-    return choice
+    return element_name
 
