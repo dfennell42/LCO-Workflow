@@ -143,6 +143,7 @@ def err_fix(base_dir,no_submit=False):
         return
     
     #fix errors
+    fixable_files = []
     for file,msg in err_files:
         dirname = os.path.dirname(file)
         err_msgs = msg.get('errors')
@@ -152,26 +153,32 @@ def err_fix(base_dir,no_submit=False):
                 if err =='pricelv':
                     print(f'Error: {err} in {dirname}.')
                     fix_sym(file)
+                    fixable_files.append(file)
                 elif err =='zbrent':
                     print(f'Error: {err} in {dirname}.')
                     continue_calc(file)
+                    fixable_files.append(file)
                 elif err == 'fexcf':
                     print(f'Error: {err} in {dirname}.')
                     continue_calc(file)
+                    fixable_files.append(file)
                 elif err =='timeout':
                     print(f'Error: Calculation in {dirname} timed out.')
                     continue_calc(file)
+                    fixable_files.append(file)
                 elif err =='cancelled':
                     print(f'Error: Calculation in {dirname} cancelled.')
                     continue_calc(file)
+                    fixable_files.append(file)
                 elif err == 'slurm_error':
                     print(f'Error: Slurm output file in {dirname} shows calculation exited with error code. Check output file for more info.')
             else:
                 print(f'Error: {err} for calculation in {dirname}. Must be fixed by hand.')
                 pass
-        if no_submit != True:
-            submit_calcs(file)
-    if no_submit == True:
+    if no_submit != True:
+        for f in fixable_files:
+            submit_calcs(f)
+    elif no_submit == True:
         print('Errors fixed if possible, but calculations not submitted.')
 #run in terminal
 #if __name__ == "__main__":

@@ -137,7 +137,7 @@ def process_vasp_inputs(base_directory):
         return
     
     #ask user if they would like to remove pairs from one structure or do separate structures
-    print('\nWould you like to remove all pairs from one structure or create a structure for each pair removal?')
+    print('\nWould you like to remove all pairs from one structure or create a separate structure for each pair removed?')
     print('1: Remove all pairs from same structure')
     print('2: Create a structure for each pair removal')
     removal_choice = input("Enter the number of your choice: ")
