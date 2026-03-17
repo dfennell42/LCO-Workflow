@@ -557,7 +557,7 @@ def get_vs(opt_dir,m_idxs,o_idx,elec_data,bl_ser):
         vm_sum += ((chg/bl)*elec)
         vo += (o_chg/bl)
         vo_sum += ((o_chg/bl)*elec)
-        vmo += ((o_chg - chg)/bl)
+        vmo += ((chg-o_chg)/bl)
         eoxm += ((o_chg*chg)/bl)
     v_data.update({'Vm':vm,'Vo':vo,'Vm-o':vmo,'Eoxm':eoxm,'wtd_Vm':(vm_sum/tot_e),'wtd_Vo':(vo_sum/tot_e)})
     v_ser = pd.Series(v_data)

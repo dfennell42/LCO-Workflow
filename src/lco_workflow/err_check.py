@@ -4,7 +4,8 @@ Author: Dorothea Fennell
 Changelog:
     7-2-25: Created, comments added
     7-7-25: Fixed time_chk so it only checks most recent slurm output
-    2-27-26: Updated to include checking CONTCAR file for correct structure
+    2-27-26: Updated to include checking CONTCAR file for correct structure.
+    3-17-26: Added additional ZBRENT error message that Custodian wasn't catching.
 """
 #import modules
 import os
@@ -121,6 +122,7 @@ def err_fix(base_dir,no_submit=False):
     subset.remove('eddrmm')
     for file in output_files:
         handler = VaspErrorHandler(file, errors_subset_to_catch=subset)
+        handler.error_msgs.update({'zbrent':["ZBRENT: fatal internal in", "ZBRENT: fatal error in bracketing","ZBRENT: fatal error: bracketing interval incorrect"]})
         err_chk = handler.check(os.path.dirname(file))
         if err_chk == True:
             msg = handler.correct(os.path.dirname(file))
