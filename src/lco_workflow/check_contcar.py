@@ -6,6 +6,7 @@ Author: Dorothea Fennell
 Changelog:
     2-27-26: Created, comments added
     3-9-26: Added check to make sure file says "Direct"
+    3-30-26: Fixed issue where it would add "direct" to file twice.
 """
 #define functions
 def get_lines(mod_dir,file):
@@ -28,7 +29,7 @@ def fix_contcar(clines,plines):
         elif i == 6 or i == 8:
             pass
         elif i == 9:
-            if clines[9].isalpha():
+            if clines[9].strip().isalpha():
                 pass
             else:
                 new_lines.append('Direct\n')

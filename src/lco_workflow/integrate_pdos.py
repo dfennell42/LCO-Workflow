@@ -192,12 +192,19 @@ def integrate_all_pdos(base_dir):
                 for p in pdir:
                     if p.startswith('Modification_'):
                         mod_name = p
-                selected_data.append(f'\n{mod_name},{x}')
+                dirname = os.path.dirname(pdos_dir)
+                if dirname.endswith('VASP_inputs'):
+                    mod_type = 'pris'
+                elif dirname.endswith('_Removed'):
+                    mod_type = 'vac'
+                elif dirname.endswith('_Added'):
+                    mod_type = 'ads'
+                selected_data.append(f'\n{mod_name},{mod_type},{x}')
         #print data to csv
         mod_header = 'Element,Atom index,e_tot,OS,spin,H d/p,Orbital'
         m_data.sort(key=sort_by_index)
         print_data(pdos_dir,m_data,'integrated-pdos',mod_header)
-    selected_header = 'Modification dir,Element,Atom index,e_tot,OS,spin,H d/p,Valence shell(s)'
+    selected_header = 'Modification dir,Modification type,Element,Atom index,e_tot,OS,spin,H d/p,Valence shell(s)'
     selected_data.sort(key=sort_by_index)
     print_data(base_dir,selected_data,'selected-int-pdos',selected_header)
 
@@ -207,8 +214,8 @@ def sort_by_index(data):
     if len(data_list) == 7:
         index = int(data_list[1])
         return index
-    elif len(data_list) == 8:
-        index = int(data_list[2])
+    elif len(data_list) == 9:
+        index = int(data_list[3])
         dirname = data_list[0].strip('\n')
         dir_num = dirname.split('_')[1]
         num = int(dir_num)

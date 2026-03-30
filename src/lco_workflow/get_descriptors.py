@@ -51,6 +51,8 @@ def get_dirs(base_dir, ask = True):
             base = '_Removed/PDOS'
         elif struc == '3':
             base = '_Added/PDOS'
+        else:
+            base = 'PDOS'
     elif ask == False:
         base = 'PDOS'
         
@@ -66,7 +68,7 @@ def get_dirs(base_dir, ask = True):
                 num = p.split('_')[1]
                 return int(num)
     pdos_dirs.sort(key=sort_dirs)
-    return pdos_dirs
+    return pdos_dirs,base
 
 def get_atoms(file):
     '''Determine atome indices'''
@@ -88,7 +90,7 @@ def get_atoms(file):
     atom_rem = li + o
     #determine indices
     o_idx = 43 - atom_rem
-    m_idxs = [(21- atom_rem), (23- atom_rem), (25 - atom_rem)]
+    m_idxs = [(19-li),(21 - li), (23 - li), (25 - li),(27-li),(29-li)]
     if li == 18:
         lix = 0
     else:
@@ -566,7 +568,7 @@ def get_vs(opt_dir,m_idxs,o_idx,elec_data,bl_ser):
 def extract_desc(base_dir,ask=True):
     '''Extract descriptors.'''
     #get directories
-    pdos_dirs = get_dirs(base_dir,ask)
+    pdos_dirs,base = get_dirs(base_dir,ask)
     
     if not pdos_dirs:
         print('No PDOS directories found. Exiting...')
@@ -646,7 +648,16 @@ def extract_desc(base_dir,ask=True):
     mod_data = pd.DataFrame(data=mod_data_list)
     #reindex dataframe to use modification
     mod_data = mod_data.set_index('Modification')
+    
+    if "_Removed" in base:
+        prefix = 'vac'
+    elif 'Added' in base:
+        prefix = 'ads'
+    elif "inputs" in base:
+        prefix = 'pris'
+    else:
+        prefix = 'all'
     #print data to csv
-    mod_data.to_csv(os.path.join(base_dir,'descriptors.csv'))
+    mod_data.to_csv(os.path.join(base_dir,f'{prefix}-descriptors.csv'))
     print('Descriptors extracted and descriptors.csv created.')
     
