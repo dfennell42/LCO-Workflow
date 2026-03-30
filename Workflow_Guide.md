@@ -44,9 +44,11 @@ If you're not certain of the pair indices, create a blank mods file, then run co
 It is possible to use the workflow to set up structures that are not inversion symmetric, but the required files are in slightly different formats and in certain cases, the workflow uses slightly different commands, so proceed with caution. It is also worth noting that running the calculations without symmetry will greatly increase calculation time. 
 
 For setting up calculations, the Mods file should be titled **"ModsIdx.txt"**, and list the ***atom*** indices (not the pair indices) followed by the replacement species. (See the Mods File section above).  
+
 The file containing the spin pairs should instead contain the spin for each atom, and should be titled **"SpinIdx.txt"**. An example file is provided in the user's `~/wf-user-files/example-files` directory.  
 
 When modifying structures, use command `wf modify` with option `--ignore-symmetry` or `-i`. This will look specifically for the ModsIdx.txt file and modify the structure accordingly.  
+
 If removing or adding atoms while ignoring symmetry, use commands `wf removeatoms` and `wf addatoms` respectively. This will remove or add *single* atoms rather than pairs. 
 
 Finally, all calculations which require optimization calculations to be completed first, i.e. PDOS and band structure calculations, will also ignore symmetry when run. Again, this will *greatly* increases calculation time, so be cautious. 
@@ -64,9 +66,11 @@ The workflow can also add pairs of atoms to the structure. To add atoms, run com
 ### Running Calculations:
 Once the set of structures has been created and all desired vacancy structures have been generated, the user executes the command `wf submit`. This command copies the Bash submission script to each directory, then submits each calculation to the scheduling queue. By default, the workflow will submit all structural optimization calculations. However, if the user wishes to only submit calculations for the vacancy or adsorption structures, the command can be executed with `--vac`/`-v` or `--add`/`-a`, respectively. 
 
-To check if the calculations have completed properly, the user can execute `wf check`. Any errors returned are printed to the command line. In addition to VASP errors, the workflow will also check if the calculations are still running, were cancelled, or timed out. 
+To check if the calculations have completed properly, the user can execute `wf check`. This will check OUTCAR for a number of errors, and will also check if the calculations are still running, were cancelled, or timed out. In order to check the SLURM output files, the files must follow the default SLURM naming convention of ***slurm-%j.out***, where %j is the job ID.
 
-The workflow will also fix certain errors. For cancelation, timeout, 'ZBRENT', or 'FEXCF' errors, the workflow will copy CONTCAR to POSCAR or for 'PRICELV' errors, the workflow will add 'ISYM = -1' to INCAR. It will then resubmit any fixed calculations. If you want to check calculations without submitting any calculations, execute the command with `--no-submit` or `-n`. 
+The workflow's error handler is based on Custodian's VASP error handler, but the workflow's version is stripped down significantly. Any errors caught will be printed to the command line, along with the directory name and any changes made to INCAR. If the SLURM output file shows the calculation exited with an error code but the error is not in the specified list of VASP errors, it will indicate that the calculation exited with an unspecified error, and to check the output files for more information.
+
+Following the error check, the workflow will then resubmit any fixed calculations. If you want to check calculations without resubmitting, execute the command with `--no-submit` or `-n`. 
 
 If no errors are found, the workflow will return "No errors found. All calculations complete.”
 
