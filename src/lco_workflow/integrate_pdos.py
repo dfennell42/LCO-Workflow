@@ -179,6 +179,7 @@ def integrate_all_pdos(base_dir):
         m_filelist, o_filelist, li_filelist = get_files(pdos_dir)
         #integrate d states
         m_data = int_d_states(m_filelist)
+        o_data = int_d_states(o_filelist)
         #determine index numbers for m1, m2 & m3
         li_rem = 18 - len(li_filelist)
         m1 = str(21 - li_rem)
@@ -202,8 +203,9 @@ def integrate_all_pdos(base_dir):
                 selected_data.append(f'\n{mod_name},{mod_type},{x}')
         #print data to csv
         mod_header = 'Element,Atom index,e_tot,OS,spin,H d/p,Orbital'
-        m_data.sort(key=sort_by_index)
-        print_data(pdos_dir,m_data,'integrated-pdos',mod_header)
+        all_data = m_data + o_data
+        all_data.sort(key=sort_by_index)
+        print_data(pdos_dir,all_data,'integrated-pdos',mod_header)
     selected_header = 'Modification dir,Modification type,Element,Atom index,e_tot,OS,spin,H d/p,Valence shell(s)'
     selected_data.sort(key=sort_by_index)
     print_data(base_dir,selected_data,'selected-int-pdos',selected_header)

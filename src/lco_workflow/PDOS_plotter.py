@@ -314,4 +314,4 @@ def plot_pdos(base_dir, no_show_img):
                 title_input=input(f"{pdos_dir}:What would you like to title this plot?")
                 check_input(title_input)
                 fig.update_layout(title_text = f'{title_input}')
-                save_plot(fig,filename,pdos_dir,w=(cw*150),h=(rw*400),show_image=no_show_img)
+                save_plot(fig,filename,pdos_dir,w=(cw*150),h=(rw*400),no_show_image=no_show_img)

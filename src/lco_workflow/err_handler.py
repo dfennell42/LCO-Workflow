@@ -77,6 +77,10 @@ class ErrorHandler:
         for file in os.listdir(dirname):
             if file.startswith('slurm-'):
                 slurm_files.append(os.path.join(dirname,file))
+
+        if not slurm_files:
+            return
+        
         slurm_files.sort()
         latest_file = slurm_files[-1]
         
@@ -120,15 +124,17 @@ class ErrorHandler:
             state = codes.split('\n')[0].strip()
             if state.lower() == 'running':
                 self.running = True
+                print(f'Calculation in {dirname} still running.')
             elif state.lower() == 'pending':
                 self.pending = True
+                print(f'Calculation in {dirname} is pending.')
             else:
                 self.running = False
                 self.pending = False
         else:
             self.running = False
             self.pending = False
-            
+    
         #return
         return len(self.errors) >0
     
@@ -142,14 +148,6 @@ class ErrorHandler:
             return
         #define set of errors where CONTCAR is copied to POSCAR
         copied = {'brions', 'edddav', 'zheev', 'eddiag','zbrent','fexcf','timeout','cancelled'}
-        
-        #check if calculation is running
-        if self.running == True:
-            print(f'Calculation in {dirname} still running.')
-            return
-        if self.pending == True:
-            print(f'Calculation in {dirname} is pending.')
-            return
         
         #copy contcar
         if self.errors & copied:

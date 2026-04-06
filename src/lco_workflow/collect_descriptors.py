@@ -98,7 +98,12 @@ def collect_descriptors():
                 '/hpcgpfs01/scratch/CTCMO-2025/LCO-middle/deLi-all/3pairs/3M',
                 '/hpcgpfs01/scratch/CTCMO-2025/NMC-middle/Thea/NMC-NPA/3deLi/dup',
                 '/hpcgpfs01/scratch/CTCMO-2025/NMC-middle/Natalia/123M-Delithiation/Third_Delithiation/reorg',
-                '/hpcgpfs01/scratch/CTCMO-2025/NMC-middle/kailey/NMC_Middle/123M-Delithiation/third_delithiation']
+                '/hpcgpfs01/scratch/CTCMO-2025/NMC-middle/kailey/NMC_Middle/123M-Delithiation/third_delithiation',
+                '/hpcgpfs01/scratch/CTCMO-2025/LCO-middle/Ga-struc/pristine',
+                '/hpcgpfs01/scratch/CTCMO-2025/LCO-middle/Ga-struc/1pair',
+                '/hpcgpfs01/scratch/CTCMO-2025/LCO-middle/Ga-struc/2pair',
+                '/hpcgpfs01/scratch/CTCMO-2025/LCO-middle/Ga-struc/3pair',
+                ]
     #create lists 
     desc_tot = []
     fail_list = []
