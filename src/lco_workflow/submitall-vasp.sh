@@ -3,7 +3,7 @@
 # set variables
 dir_type=$1
 search_dir=${2:-.}
-all_struc=("VASP_inputs" "*_Removed" "*_Added")
+all_struc=("VASP_inputs" "*_Removed" "*_Added" "PDOS")
 # Ensure vasp.sh exists in the head directory
 if [[ ! -f "$search_dir/vasp.sh" ]]; then
     echo "Error: vasp.sh not found in $search_dir"
@@ -13,15 +13,21 @@ fi
 submit() {
     # Find all directories named "VASP_inputs" and copy vasp.sh into them
     find "$search_dir" -type d -name "$1" | while read -r dir; do
-        echo "Copying vasp.sh to $dir"
-        cp "$search_dir/vasp.sh" "$dir/"
+        if [ ! -f "OUTCAR"]; then
+	    echo "Copying vasp.sh to $dir"
+            cp "$search_dir/vasp.sh" "$dir/"
+	    fi
     done
 
     # Find all vasp.sh files in VASP_inputs directories and submit them
     find "$search_dir" -type f -name "vasp.sh" -path "*/$1/*" | while read -r file; do
-        job_dir=$(dirname "$file")
-        echo "Submitting sbatch in directory: $job_dir"
-        (cd "$job_dir" && sbatch vasp.sh)
+        if [ ! -f "OUTCAR"]; then
+            job_dir=$(dirname "$file")
+            echo "Submitting sbatch in directory: $job_dir"
+            (cd "$job_dir" && sbatch vasp.sh)
+	    else
+	        echo "Skipping $dir, calculation has already been run."
+	    fi
     done
     
     echo "All jobs submitted."
