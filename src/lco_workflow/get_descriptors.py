@@ -90,7 +90,7 @@ def get_atoms(file):
     atom_rem = li + o
     #determine indices
     o_idx = 43 - atom_rem
-    m_idxs = [(19-li),(21 - li), (23 - li), (25 - li),(27-li),(29-li)]
+    m_idxs = [(21 - li), (23 - li), (25 - li)]
     if li == 18:
         lix = 0
     else:

@@ -22,7 +22,7 @@ def get_dirs(mod_dir):
     '''Runs through all directories in base directory and returns list of vacancy directories.'''
     vac_dirs=[]
     for root, dirs, files in os.walk(mod_dir):
-        if root.endswith('Removed') and 'OUTCAR' in os.listdir(root):
+        if root.endswith('Removed') and 'OUTCAR' in files:
             vac_dirs.append(root)
     vac_dirs.sort()
     return vac_dirs

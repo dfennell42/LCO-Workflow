@@ -113,7 +113,7 @@ def option1(f,fig,plot_choice, r=1, c =1):
     elif plot_choice == '2':
         plot_title = f'{name[0]}'
     fig.update_layout(title_text = plot_title)
-    
+    fig.update_yaxes(minor=dict(ticks='outside',showgrid=True,gridcolor='#C6C6C6',tickcolor='black',dtick=1),showgrid=True,gridcolor='#C6C6C6')
     return fig, name
 
 def option2(f,fig,fermi,plot_choice,r=1,c=1):
@@ -143,6 +143,7 @@ def option2(f,fig,fermi,plot_choice,r=1,c=1):
         elif plot_choice == '2':
             plot_title = f'{name[0]}'
         fig.update_layout(title_text = plot_title)
+        #fig.add_hline(y=fermi,line_width=2, line_dash="dash",line_color='purple',annotation_text='E_fermi',annotation_font_color = 'purple',annotation_font_size=12)
     return fig, name
 
 def check_input(user_input):

@@ -92,7 +92,7 @@ def int_pdos(data,up_idx,down_idx,lower,upper,block,diff=True):
     else:
         tota = tot_e
         return tota
-    
+
 def get_os(ele,e_tot):
     """Gets oxidation state of metal."""
     valence = ele.valence[1]

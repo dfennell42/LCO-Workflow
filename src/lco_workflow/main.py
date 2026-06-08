@@ -48,6 +48,8 @@ from .collect_descriptors import collect_descriptors
 from .collect_contcar import copy_all_files
 #update command
 from .wf_update import check_vrsn
+#chg diff
+from .chg_diff import get_chgdiff
 #create app
 app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
 
@@ -164,6 +166,11 @@ def plot(
     plot_pdos(os.getcwd(),no_show)
 
 @app.command()
+def chgdiff():
+    '''Generates CHGDIFF.cube file from pristine and vacancy CHGCAR files and visualizes the charge difference. Note: CHGCAR files MUST have the same size real space grids.'''
+    get_chgdiff()
+    
+@app.command()
 def extract():
     '''Gets ML descriptors from PDOS and optimization calculations.'''
     extract_desc(os.getcwd())
@@ -173,6 +180,7 @@ def submit(
         calc: Annotated[str, typer.Argument(help='The type of calculation to submit. Options: struc: Pristine or vacancy surface calculations. pdos: PDOS calculations')] = 'struc',
         vac:Annotated[bool,typer.Option("--vac","-v",help='Run only vacancy calculations. Does not work with calc = pdos')] = False,
         add: Annotated[bool,typer.Option("--add","-a",help='Run only adsorption calculations. Does not work with calc = pdos')] = False,
+        force: Annotated[bool, typer.Option("--force","-f",help="Submits ALL calculations, including those that have been run before.")] = False,
         ):
     '''Submits vasp calculations.'''
     pkgdir = sys.modules['lco_workflow'].__path__[0]
@@ -189,7 +197,11 @@ def submit(
             calc_type = "all"
     elif calc.lower() == 'pdos':
         calc_type = "PDOS"
-    os.system(f'bash {fpath} {calc_type}')
+    if force == True:
+        force = "true"
+    elif force == False:
+        force = "false"
+    os.system(f'bash {fpath} {calc_type} {force}')
         
 @app.command()
 def check(
