@@ -1,6 +1,6 @@
 # LCO Modification Workflow CLI
 #### Author: Dorothea Fennell (dfennell1@bnl.gov, dfennell37@gmail.com)
-**Version**: 0.13.1
+**Version**: 0.14.0
 
 ---
 ### Important Note:
@@ -11,6 +11,7 @@ However, if you prefer to use this version, follow the instructions for the edit
 ---
 
 A command line interface tool designed to simplify running VASP calculations for LCO. This workflow can:
+- Create surface structures
 - Modify composition
 - Create vacancies
 - Submit calculations
@@ -64,186 +65,212 @@ $ wf [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `init`: Initializes workflow settings.
+* `generate`: Generates surface structure based on bulk structure and user input.
 * `modify`: Modifies LCO structure based on user input.
 * `heo`: Generates random modifications for HEO...
-* `removepairs`: Removes Li/O pairs from structures
+* `removepairs`: Removes Li/O pairs from structures.
 * `removeatoms`: Removes single Li or O atoms, ignoring...
 * `addpairs`: Adds pairs of atoms to structures.
 * `addatoms`: Adds single atoms to structures.
-* `gete`: Gets pristine E. E_vac, and E_ads.
-* `pdos`: sets up PDOS calculations
+* `gete`: Generates E_pristine, E_vac, and E_ads CSV...
+* `pdos`: Sets up PDOS calculations.
 * `parse`: Parses PDOS data into individual files and...
-* `integrate`: Integrates the PDOS files.
-* `plot`: Plots PDOS
+* `integrate`: Integrates already parsed PDOS files.
+* `plot`: Plots PDOS based on user input.
+* `chgdiff`: Generates CHGDIFF.cube file and plots charge difference.
 * `extract`: Gets ML descriptors from PDOS and...
-* `submit`: Submits vasp calculations.
+* `submit`: Submits VASP calculations.
 * `check`: Checks vasp.out for errors and fixes and...
 * `collect`: Collects all CONTCAR files in Structures...
 * `update`: Checks workflow version and updates if...
 * `extall`: Runs descriptor extraction for all...
 
-## `wf init`
+## `init`
 
 Initializes workflow settings.
 
 **Usage**:
 
 ```console
-$ wf init [OPTIONS]
+$ init [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `wf modify`
+## `generate`
+
+Generates surface structure based on bulk structure and user input. Bulk structure can be given as a file or as a Materials Project ID. Workflow will also prompt for supercell size and Miller index.
+    
+If command line options are provided, workflow will bypass input sections for the provided information. 
+    
+Note: If using Materials Project, an API key MUST be provided.
+
+**Usage**:
+
+```console
+$ generate [OPTIONS]
+```
+
+**Options**:
+
+* `-b, --bulk TEXT`: Path to bulk file or Material Project ID.
+* `-s, --sc-size TEXT`: Supercell size given as set of vectors or list of scaling factors.
+* `-m, --miller TEXT`: Miller index of facet, given as comma-separated list.
+* `-v, --vacuum INTEGER`: Thickness of vacuum layer, in angstrom (Å). Default is 10 Å.
+* `--help`: Show this message and exit.
+
+## `modify`
 
 Modifies LCO structure based on user input. Needs ModsCo.txt
 
 **Usage**:
 
 ```console
-$ wf modify [OPTIONS]
+$ modify [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `wf heo`
+## `heo`
 
 Generates random modifications for HEO structures based on user input, ignoring symmetry.
 
 **Usage**:
 
 ```console
-$ wf heo [OPTIONS]
+$ heo [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `wf removepairs`
+## `removepairs`
 
-Removes Li/O pairs from structures
+Removes Li/O pairs from structures.
 
 **Usage**:
 
 ```console
-$ wf removepairs [OPTIONS]
+$ removepairs [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `wf removeatoms`
+## `removeatoms`
 
 Removes single Li or O atoms, ignoring symmetry.
 
 **Usage**:
 
 ```console
-$ wf removeatoms [OPTIONS]
+$ removeatoms [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `wf addpairs`
+## `addpairs`
 
 Adds pairs of atoms to structures.
 
 **Usage**:
 
 ```console
-$ wf addpairs [OPTIONS]
+$ addpairs [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `wf addatoms`
+## `addatoms`
 
 Adds single atoms to structures.
 
 **Usage**:
 
 ```console
-$ wf addatoms [OPTIONS]
+$ addatoms [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `wf gete`
+## `gete`
 
-Gets pristine E, E_vac, and E_ads.
+Generates E_pristine, E_vac, and E_ads CSV files.
 
 **Usage**:
 
 ```console
-$ wf gete [OPTIONS]
+$ gete [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `wf pdos`
+## `pdos`
 
-sets up PDOS calculations
+Sets up PDOS calculations.
 
 **Usage**:
 
 ```console
-$ wf pdos [OPTIONS]
+$ pdos [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `wf parse`
+## `parse`
 
-Parses PDOS data into individual files and integrates
+Parses PDOS data into individual files and integrates.
 
 **Usage**:
 
 ```console
-$ wf parse [OPTIONS]
+$ parse [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `wf integrate`
+## `integrate`
 
-Integrates the PDOS files. Note: Files must be parsed before integration. The parse command parses AND integrates, so this command is only if integration needs to be performed on already parsed files.
+Integrates the PDOS files. 
+    
+Note: Files MUST be parsed before integration. The parse command parses AND integrates, so this command should only be used if integration needs to be performed on already parsed files.
 
 **Usage**:
 
 ```console
-$ wf integrate [OPTIONS]
+$ integrate [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `wf plot`
+## `plot`
 
-Plots PDOS
+Plots PDOS based on user input.
 
 **Usage**:
 
 ```console
-$ wf plot [OPTIONS]
+$ plot [OPTIONS]
 ```
 
 **Options**:
@@ -251,28 +278,43 @@ $ wf plot [OPTIONS]
 * `-n, --no-show-image`: Do not display plot in X11 window after running command.
 * `--help`: Show this message and exit.
 
-## `wf extract`
+## `chgdiff`
 
-Gets ML descriptors from PDOS and optimization calculations.
+Generates CHGDIFF.cube file from pristine and vacancy CHGCAR files and visualizes the charge difference. 
+Note: CHGCAR files MUST have the same size real space grids.
 
 **Usage**:
 
 ```console
-$ wf extract [OPTIONS]
+$ chgdiff [OPTIONS]
 ```
 
 **Options**:
 
 * `--help`: Show this message and exit.
 
-## `wf submit`
+## `extract`
 
-Submits vasp calculations.
+Gets ML descriptors from PDOS and optimization calculations.
 
 **Usage**:
 
 ```console
-$ wf submit [OPTIONS] [CALC]
+$ extract [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `submit`
+
+Submits VASP calculations.
+
+**Usage**:
+
+```console
+$ submit [OPTIONS] [CALC]
 ```
 
 **Arguments**:
@@ -283,16 +325,17 @@ $ wf submit [OPTIONS] [CALC]
 
 * `-v, --vac`: Run only vacancy calculations. Does not work with calc = pdos
 * `-a, --add`: Run only adsorption calculations. Does not work with calc = pdos
+* `-f, --force`: Submits ALL calculations, including those that have been run before.
 * `--help`: Show this message and exit.
 
-## `wf check`
+## `check`
 
 Checks vasp.out for errors and fixes and resubmits calculations if possible.
 
 **Usage**:
 
 ```console
-$ wf check [OPTIONS]
+$ check [OPTIONS]
 ```
 
 **Options**:
@@ -300,14 +343,14 @@ $ wf check [OPTIONS]
 * `-n, --no-submit`: Use -n or --no-submit to run check without autosubmitting calculations
 * `--help`: Show this message and exit.
 
-## `wf collect`
+## `collect`
 
 Collects all CONTCAR files in Structures directory.
 
 **Usage**:
 
 ```console
-$ wf collect [OPTIONS]
+$ collect [OPTIONS]
 ```
 
 **Options**:
@@ -317,14 +360,14 @@ $ wf collect [OPTIONS]
 * `-g, --group TEXT`: Force set the name of the group of calculations
 * `--help`: Show this message and exit.
 
-## `wf update`
+## `update`
 
 Checks workflow version and updates if necessary.
 
 **Usage**:
 
 ```console
-$ wf update [OPTIONS]
+$ update [OPTIONS]
 ```
 
 **Options**:
@@ -332,14 +375,14 @@ $ wf update [OPTIONS]
 * `-e, --editable`: Install the workflow as an editable package.
 * `--help`: Show this message and exit.
 
-## `wf extall`
+## `extall`
 
 Runs descriptor extraction for all directories.
 
 **Usage**:
 
 ```console
-$ wf extall [OPTIONS]
+$ extall [OPTIONS]
 ```
 
 **Options**:
