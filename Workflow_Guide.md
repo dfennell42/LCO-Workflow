@@ -16,12 +16,26 @@ If running the Delafossite workflow, the workflow will copy the above files, as 
 If running the Delafossite workflow, the command will also ask you to provide the path to the folder containing the VASP pseudopotentials and sets it as an environment variable. 
 
 ### Preparing to Run Calculations:
-Before running any calculations, a series of files must be provided by the user. These are as follows:
+Before running any calculations, a series of files must be provided. These are as follows:
 1. A base POSCAR file, preferably **inversion symmetric**. While the workflow *can* now modify the structure while ignoring symmetry, it's not recommended as it greatly increases calculation time. 
 2. A file denoting the spin pairs of the cell, titled “SpinPairs.txt”. This is necessary due to the antiferromagnetic ordering of LCO and delafossites, and allows the calculations to run spin polarized. 
 3. A submission script to submit the calculations to the SLURM job queue, ***titled vasp.sh***. The file must be titled "vasp.sh" or the submission command ***will not*** work. 
 
 Examples of all three files are provided in the workflow package and are copied to the user’s `~/wf-user-files` directory. 
+
+### Creating Surface Structures:
+With version 0.14.0, the workflow can now generate surface structures using command `wf generate`!
+
+The user must provide either the bulk structure file or a Materials Project ID, the size of the supercell, and the Miller index. It will then create the supercell, check for inversion symmetry, adjusting if necessary, and reorganize the file so the symmetrical atom pairs are written together (i.e. a symmetrical pair is written so their indices are 0 and 1). The reorganized cell is then converted to a slab by adding vacuum, the POSCAR file is written, and the ordered index pairs are used to create a base SpinPairs.txt file. 
+
+Alternatively, rather than waiting for the workflow to prompt, the user can use command line options to provide the information and bypass the prompts (see the `wf generate` help menu for options).
+
+#### A Few Important Notes About Generating Surface Structures:
+1.  While there are checks to ensure symmetry and proper supercell creation, never use the POSCAR without checking it first. While this command was tested on a wide variety of structures and crystal spacegroups, I cannot guarantee it will be correct. 
+
+2. While the SpinPairs file contains the index pairs, the spin state (up, down) **MUST** be set by hand. Also worth noting, the SpinPairs file will only contain the index pairs of the metals in the system, excluding alkali and alkaline metals. 
+
+3. If given a material ID, the workflow requires a Materials Project API key to pull the structure from the database. It will first check the environment variables, but if the API key is not found, it will prompt the user to enter their API key and store it in the module's .env file. 
 
 ### Setting Up Calculations:
 The workflow is designed to run recursively, and will process a whole set of calculations at a time. To organize calculations, it's recommended to create a new directory for each set. The following guide will assume you're starting in an empty directory and setting up a new set of calculations.
@@ -64,7 +78,7 @@ This command can be used repeatedly to create multiple vacancies.
 The workflow can also add pairs of atoms to the structure. To add atoms, run command `wf addpairs`. The workflow will then prompt the user to determine if the new structures should be generated from the pristine structures, vacancy structures, or existing adsorption structures. It will then ask which species the new pair(s) should be attached to, the index of the pair(s) to add new atoms to, and the species of the new atoms. The workflow then modifies the structures and generates the input files in a new subdirectory under `VASP_inputs` called `{Element}_Pairs_Added` where {Element} is the symbol of the species added.
 
 ### Running Calculations:
-Once the set of structures has been created and all desired vacancy structures have been generated, the user executes the command `wf submit`. This command copies the Bash submission script to each directory, then submits each calculation to the scheduling queue. By default, the workflow will submit all structural optimization calculations. However, if the user wishes to only submit calculations for the vacancy or adsorption structures, the command can be executed with `--vac`/`-v` or `--add`/`-a`, respectively. 
+Once the set of structures has been created and all desired vacancy structures have been generated, the user executes the command `wf submit`. This command copies the Bash submission script to each directory, checks to see if the calculation has already been run by checking for 'OUTCAR', then submits each calculation to the scheduling queue. By default, the workflow will submit all structural optimization calculations that have yet to be run. However, if the user wishes to only submit calculations for the vacancy or adsorption structures, the command can be executed with `--vac`/`-v` or `--add`/`-a`, respectively. Additionally, if the user wishes to rerun a calculation, using option `--force`/`-f` will submit all calculations, regardless of run status. 
 
 To check if the calculations have completed properly, the user can execute `wf check`. This will check OUTCAR for a number of errors, and will also check if the calculations are still running, were cancelled, or timed out. In order to check the SLURM output files, the files must follow the default SLURM naming convention of ***slurm-%j.out***, where %j is the job ID.
 
@@ -123,6 +137,15 @@ The workflow can also visualize and plot PDOS using command `wf plot`. The workf
 Additionally, if the user types "exit" into any of the above prompts, the script will abort. 
 
 Using the given information, the workflow then plots the PDOS, saves it as a PNG file to the PDOS directory, and displays the image in an X11 window. If you wish to plot and save the PDOS without displaying them, the command can be run with option `--no-show-image` or `-n`. 
+
+### Charge Transfer Plots:
+Following structural optimization, the user can use command `wf chgdiff` to calculate and visualize the charge transfer between the pristine and vacancy structures. The workflow will prompt for the paths to the pristine and vacancy CHGCAR files. If an optimization was run for the removed atoms, the CHGCAR should be included in the prompt for the vacancy files, given as a comma-separated list of paths. 
+
+**NOTE**: All CHGCAR files **MUST** have the same size real space grids. This can be achieved by running any vacancy calculations with a frozen lattice by setting ISIF = 2 in the INCAR file. 
+
+The workflow then calculates the change in charge by subtracting the charge of the vacancy structure(s) from the pristine and writes the charge to CHGDIFF.cube. The workflow then uses PyVista to plot the charge difference as isosurfaces. This allows for charge transfer visualization without using a separate program and without needing to download files from a cluster. The workflow will open the structure in an X11 window, plotting the isosurfaces over the provided surface structure. A slider will be provided at the top right, which will allow the user to adjust the isosurface level directly, without needing to rerun the command. 
+
+If you wish to calculate the charge transfer without visualization, the command can be run with option `--no-show-image` or `-n`. 
 
 ### Band Structure Calculations:
 Once the structural optimizatons are complete, the user can then set up band structure calculations by executing command `wf bands`. The workflow will create a new subdirectory in the `/VASP_inputs`, titled `./Band_struc`. It will then copy the appropriate input files to the directory, using the CONTCAR from the optimization calculations as POSCAR, and modify INCAR based on "bands_incar_params.txt". 
