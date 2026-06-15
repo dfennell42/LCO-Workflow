@@ -4,7 +4,7 @@
 dir_type=$1
 search_dir="."
 force=${2:-"false"}
-all_struc=("VASP_inputs" "*_Removed" "*_Added" "PDOS")
+all_struc=("VASP_inputs" "*_Removed" "*_Added")
 # Ensure vasp.sh exists in the head directory
 if [[ ! -f "$search_dir/vasp.sh" ]]; then
     echo "Error: vasp.sh not found in $search_dir"
