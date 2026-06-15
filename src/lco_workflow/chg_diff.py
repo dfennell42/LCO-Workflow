@@ -112,19 +112,22 @@ def check_input(user_input):
         print('Exiting...')
         sys.exit()
         
-def get_chgdiff():
+def get_chgdiff(no_show_img=False):
     '''Gets user input for CHGCAR files and returns CHGDIFF.cube and plots the charge difference.'''
     #get user input
     base_dir = os.getcwd()
     print('\nIf you would like to exit at any point, type "exit" into any input prompt.')
-    print('\nPlease input the relative path of the pristine CHGCAR file.')
+    print('\nPlease input the path of the pristine CHGCAR file.')
     pris_file = input('Pristine CHGCAR:')
     check_input(pris_file)
-    print('\nPlease input the relative path to the vacancy CHGCAR file(s). If there are multiple files, please input the paths as a comma-separated list.')
+    print('\nPlease input the path to the vacancy CHGCAR file(s). If there are multiple files, please input the paths as a comma-separated list.')
     vacs = input('Vacancy CHGCAR(s):')
     check_input(vacs)
     vac_files = vacs.split(',')
     #calc chgdiff
     calc_chgdiff(base_dir, pris_file, vac_files)
     #plot chgdiff
-    plot_chgdiff(base_dir)
+    if no_show_img == False:
+        plot_chgdiff(base_dir)
+    elif no_show_img == True:
+        print('Skipping visualization...')

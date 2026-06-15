@@ -82,6 +82,7 @@ def generate(
     \nNote: If using Materials Project, an API key MUST be provided. 
     '''
     create_structure(bulk,sc_size,miller,vacuum)
+
 @app.command()
 def modify():
     '''Modifies LCO structure based on user input. Needs ModsCo.txt '''
@@ -184,12 +185,14 @@ def plot(
     plot_pdos(os.getcwd(),no_show)
 
 @app.command(short_help='Generates CHGDIFF.cube file and plots charge difference.')
-def chgdiff():
+def chgdiff(
+        no_show:Annotated[bool,typer.Option('--no-show-image','-n',help='Do not display plot in X11 window after running command.',show_default=False)] = False,
+        ):
     '''
     Generates CHGDIFF.cube file from pristine and vacancy CHGCAR files and visualizes the charge difference. 
     Note: CHGCAR files MUST have the same size real space grids.
     '''
-    get_chgdiff()
+    get_chgdiff(no_show)
     
 @app.command()
 def extract():
