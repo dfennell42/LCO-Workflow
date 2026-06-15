@@ -1,16 +1,21 @@
 import os
 import shutil
+import numpy as np
 from pymatgen.io.vasp import Kpoints, Poscar, Incar
 from pymatgen.io.vasp.sets import MPRelaxSet
 from pymatgen.core.structure import Structure
 
 # Function to generate VASP inputs from a POSCAR file
-def generate_vasp_inputs(vasp_file, custom_incar_params=None):
+def generate_vasp_inputs(vasp_file,frozen=False, custom_incar_params=None):
     # Read the structure from the VASP POSCAR file
     structure = Structure.from_file(vasp_file)
 
     # Prepare the necessary VASP input files
-    poscar = Poscar(structure)
+    if frozen == True:
+        sel_dyn = np.full((len(structure.sites),3),False)
+        poscar = Poscar(structure,selective_dynamics=sel_dyn)
+    else:
+        poscar = Poscar(structure)
     incar = Incar.from_dict(MPRelaxSet(structure).incar)
     kpoints = Kpoints.monkhorst_automatic([4, 4, 1])  # could specify a different kgrid
 
@@ -38,13 +43,13 @@ def generate_vasp_inputs(vasp_file, custom_incar_params=None):
     print(f"VASP inputs generated in: {input_dir}")
 
 # Function to search for .vasp files and generate VASP inputs
-def generate_vasp_inputs_in_dir(root_dir, custom_incar_params=None):
+def generate_vasp_inputs_in_dir(root_dir,frozen=False, custom_incar_params=None):
     # Walk through all subdirectories of the root directory
     for subdir, dirs, files in os.walk(root_dir):
         for file in files:
             if file.endswith(".vasp"):  # Check if file ends with .vasp
                 vasp_file = os.path.join(subdir, file)
-                generate_vasp_inputs(vasp_file, custom_incar_params)
+                generate_vasp_inputs(vasp_file,frozen, custom_incar_params)
 
 # Define custom INCAR parameters
 custom_incar_params = {

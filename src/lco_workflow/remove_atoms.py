@@ -6,12 +6,16 @@ Author: Dorothea Fennell
 Changelog: 
     2-26-26: Created, comments added
     3-9-26: Updated to read sample POSCAR from head dir and pull POSCAR_modified_*.vasp if ASE can't read POSCAR.
+    6-11-26: Updated to add section to generate POSCAR with selective dynamics & check if selective dynamics in pris POSCAR
 """
 #import modules
 import os
 import shutil
 import copy
+import numpy as np
 from ase.io import read, write
+from pymatgen.io.vasp import Poscar
+from pymatgen.core.structure import Structure
 
 #define functions
 def copy_vasp_files(source_dir, dest_dir):
@@ -27,6 +31,18 @@ def copy_vasp_files(source_dir, dest_dir):
             print(f"Copied {file} to {dest_dir}")
         else:
             print(f"Warning: {file} not found in {source_dir}, skipping.")
+
+def chk_seldyn(file):
+    '''Checks POSCAR for selective dynamics'''
+    with open(file,'r') as f:
+        lines = f.readlines()
+    for l in lines:
+        if 'selective dynamics' in l.lower():
+            frozen = True
+            break
+        else:
+            frozen = False
+    return frozen
 
 def get_indices(atoms, element):
     """Identifies atoms for a given element."""
@@ -56,6 +72,7 @@ def process_removal(vasp_dir,indices,selected_indices, element_name):
     print(f"\nProcessing: {vasp_dir}")
 
     poscar_path = os.path.join(vasp_dir, "POSCAR")
+    frozen = chk_seldyn(poscar_path)
     #add fix for ase not reading poscar
     try:
         atoms = read(poscar_path)
@@ -77,7 +94,15 @@ def process_removal(vasp_dir,indices,selected_indices, element_name):
 
     # Copy the modified POSCAR as just "POSCAR" for VASP
     final_poscar_path = os.path.join(output_dir, "POSCAR")
-    shutil.copy2(output_file, final_poscar_path)
+    if frozen == True:
+        #convert to PMG so we can write POSCAR with selective dynamics
+        struc = Structure.from_ase_atoms(modified_atoms)
+        sel_dyn = np.full((len(struc.sites),3),False)
+        poscar = Poscar(struc,selective_dynamics=sel_dyn)
+        poscar.write_file(final_poscar_path)
+    else:
+        shutil.copy2(output_file, final_poscar_path)
+    
     print(f"Copied {output_file} to {final_poscar_path} for VASP.")
 
     # Copy required VASP files
