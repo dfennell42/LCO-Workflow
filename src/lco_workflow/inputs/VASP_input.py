@@ -50,7 +50,7 @@ def generate_vasp_inputs_in_dir(root_dir,frozen=False, custom_incar_params=None)
             if file.endswith(".vasp"):  # Check if file ends with .vasp
                 vasp_file = os.path.join(subdir, file)
                 generate_vasp_inputs(vasp_file,frozen, custom_incar_params)
-
+    
 # Define custom INCAR parameters
 custom_incar_params = {
     "ENCUT": 520,

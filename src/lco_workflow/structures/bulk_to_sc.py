@@ -8,20 +8,21 @@ Changelog:
     6-11-26: Converted script to functions for workflow implementation.
     6-12-26: Rewrote functions to work for more crystal structures, added functions to pull from Mat. Proj API, rewrote layer check, changed write spin pairs. 
     6-15-26: Wrote user input section.
+    7-1-26: Added line to convert list of spin pair tuples to strings
+    7-6-26: Rewrote surface cleavage and symmetry checks.
 """
 #import
 import os
 import sys
 import dotenv
 import numpy as np
-from ase.io import write
-from ase.build import cut,stack,add_vacuum
+from ase.build import cut,stack
 from ase.build.tools import IncompatibleCellError
-from ase.geometry import get_layers
 from pymatgen.core.structure import Structure
+from pymatgen.core.surface import SlabGenerator
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.ext.matproj import MPRester
-
+from pymatgen.io.vasp import Poscar
 #define functions
 def check_input(user_input):
     if user_input.lower() == 'exit':
@@ -80,47 +81,37 @@ def get_idx_pairs(eq_idxs):
                 idx_pairs.append([eq[i],eq[-i-1]])
     return idx_pairs
 
-def chk_layers(struc,miller):
-    '''Checks if top & bottom layers of the structure are inversion symmetric.'''
+def fix_layers(struc):
+    '''Fixes struc so cell is inversion symmetric.'''
     cell = struc.to_ase_atoms()
-    #get number of layers
-    layer_idx,layer_dist = get_layers(cell, miller)
-    #check if top & bottom layer are the same element
-    #get top layer index, we know bottom layer is 0
-    l_max = layer_idx.max()
-    #get distance of top layer from origin
-    max_dist = layer_dist[l_max]
-    #get list of periodic sites for top & bottom layers
-    layer1 = []
-    layer2 = []
-    for s in struc.sites:
-        x,y,z = s.coords
-        if z == float(0):
-            layer1.append(s)
-        elif z == max_dist:
-            layer2.append(s)
-    spg_ops = SpacegroupAnalyzer(struc).get_space_group_operations()
-    sym = spg_ops.are_symmetrically_equivalent(layer1, layer2)
-    if sym == False:
-        layer = cut(cell,nlayers=1,tolerance=0.001)
-        try:
-            new_cell = stack(cell,layer)
-        except IncompatibleCellError:
-            print('Error raised. A layer of atoms added to the structure to keep inversion symmetry is incompatible with the current cell.')
-            print('If the layer is added, structure may be overly strained. If the layer is not added, structure may not be inversion symmetric.')
-            print("Would you like to add the layer? Please answer 'yes' or 'no', or 'exit' if you'd like to quit.")
-            add_layer = input()
-            check_input(add_layer)
-            if add_layer.lower() == 'yes':
-                new_cell = stack(cell,layer,maxstrain=None)
-            elif add_layer.lower() == 'no':
-                new_cell = cell
-        new_struc = Structure.from_ase_atoms(new_cell)
-        return new_struc
-    elif sym == True:
-        return
+    layer = cut(cell,nlayers=1,tolerance=0.001)
+    try:
+        new_cell = stack(cell,layer)
+    except IncompatibleCellError:
+        return None
+        #print('Error raised. A layer of atoms added to the structure to keep inversion symmetry is incompatible with the current cell.')
+        #print('If the layer is added, structure may be overly strained. If the layer is not added, structure will not be inversion symmetric.')
+        #print("Would you like to add the layer? Please answer 'yes' or 'no', or 'exit' if you'd like to quit.")
+        #add_layer = input()
+        #check_input(add_layer)
+        #if add_layer.lower() == 'yes':
+         #   new_cell = stack(cell,layer,maxstrain=None)
+        #elif add_layer.lower() == 'no':
+         #   new_cell = cell
+    new_struc = Structure.from_ase_atoms(new_cell)
+    return new_struc
+
+def write_poscar(base_dir,slab,og_struc,miller):
+    '''Gets filename and writes POSCAR file.'''
+    formula = og_struc.composition.reduced_formula
+    #convert miller index to str
+    ms= ''.join([str(x) for x in miller])
+    filename = f'{formula}-{ms}-slab.vasp'
+    Poscar(slab).write_file(os.path.join(base_dir,filename))
+    #print output
+    print(f'POSCAR file {filename} written.')
     
-def get_supercell(bulk,sc_size,miller):
+def get_slab(base_dir,bulk,sc_size,miller,vacuum):
     '''Generates supercell based on user input and bulk structure.'''
     #read in file or pull from materials project
     if os.path.exists(bulk):
@@ -129,43 +120,67 @@ def get_supercell(bulk,sc_size,miller):
         struc = get_from_mp(bulk)
     else:
         print('Bulk structure not found, either as file or on the Materials Project. Please try again. \nExiting...')
-        sys.exit()
-    
+        sys.exit(1)
+    #set symmetry 
+    sym = True
     #get refined structure
     ref_struc = SpacegroupAnalyzer(struc).get_refined_structure()
     #make supercell
     cell = ref_struc.make_supercell(sc_size,in_place=False)
-    #check layers
-    chk = chk_layers(cell,miller)
-    if chk != None:
-        cell = chk
-    #get sites
-    sites = cell.sites
+    #surface cleavage
+    slabgen = SlabGenerator(cell, miller, 1, vacuum,center_slab=True,primitive=False)
+    slabs = slabgen.get_slabs()
+    #check if slab is symmetric
+    for s in slabs:
+        if s.is_symmetric() == True:
+            slab = s
+            break
+        else:
+            slab = None
+    #try to fix slab by adding layer
+    if slab == None:
+        new_struc = fix_layers(cell)
+        if new_struc != None:
+            new_slabgen = SlabGenerator(new_struc, miller, 1, vacuum,center_slab=True,primitive=False)
+            slabs = new_slabgen.get_slabs()
+            for s in slabs:
+                if s.is_symmetric() == True:
+                    slab = s
+                    break
+                else:
+                    slab = None     
+        if new_struc == None or slab == None:
+            print('Slab inversion symmetry could not be enforced. Would you like to continue with structure generation?')
+            cont = input('Please answer yes (y) or no (n):')
+            if cont.lower().startswith('y'):
+                sym = False
+                pass
+            else:
+                print('Exiting...')
+                sys.exit()
     #sort structure by layer
-    cell.sort(key=z_coord)
-    #get symmetrized structure
-    spga = SpacegroupAnalyzer(cell)
-    sym_cell = spga.get_symmetrized_structure()
-    eq_idxs = sym_cell.equivalent_indices
-    #get idx pairs
-    idx_pairs = get_idx_pairs(eq_idxs)
-    #reorder sites
-    site_list = []
-    for [i,j] in idx_pairs:
-        site_list.append(sites[i])
-        site_list.append(sites[j])
-    #create reordered cell
-    reordered_cell = Structure.from_sites(site_list)
-    return reordered_cell
-
-def get_slab(reordered_cell,vacuum):
-    '''Gets slab from reordered cell & writes POSCAR file.'''
-    ase_cell = reordered_cell.to_ase_atoms()
-    add_vacuum(ase_cell,vacuum)
-    formula = ase_cell.get_chemical_formula(empirical=True)
-    filename = f'{formula}-slab.vasp'
-    write(filename,ase_cell,format='vasp')
-    return filename
+    slab.sort(key=z_coord)
+    #get symmetrized structure & write spin pairs if symmetric
+    if sym == True:
+        spga = SpacegroupAnalyzer(slab)
+        sym_cell = spga.get_symmetrized_structure()
+        eq_idxs = sym_cell.equivalent_indices
+        #get idx pairs
+        idx_pairs = get_idx_pairs(eq_idxs)
+        #reorder sites
+        sites = slab.sites
+        site_list = []
+        for [i,j] in idx_pairs:
+            site_list.append(sites[i])
+            site_list.append(sites[j])
+        #create reordered cell
+        reordered_cell = Structure.from_sites(site_list)
+        #write spin pairs if sym
+        write_spin_pairs(base_dir, reordered_cell)
+    elif sym == False:
+        print('Due to lack of symmetry, SpinPairs.txt file not created.')
+    #write poscar
+    write_poscar(base_dir, slab, cell, miller)
 
 def write_spin_pairs(base_dir,reordered_cell):
     '''Writes spin pairs file given organized structure. NOTE: Only writes the indices of the pairs, does not assign spin states.'''
@@ -184,15 +199,19 @@ def write_spin_pairs(base_dir,reordered_cell):
     if not spin_pairs:
         print('Odd number of metals, cannot write create SpinPairs file.')
         return
-    
+    #convert tuple to str
+    sp_str = [str(x).strip('()') for x in spin_pairs]
+    #write file
     with open(f'{base_dir}/SpinPairs.txt','w') as f:
-        f.writelines(spin_pairs)
+        f.writelines(sp_str)
+    print('SpinPairs.txt file created. NOTE: Spin states (up,down) must be assigned by hand!')
 
 def create_structure(bulk=None,sc_size=None,miller=None,vacuum=10):
     '''Generates surface structure based on bulk structure and user input. Bulk structure can be given as a file or as a Materials Project ID. Note: If using Materials Project, an API key MUST be provided. User input can be provided either through input prompts or using command line options.'''
-    print('\nIf you would like to exit at any point, type "exit" into any input prompt.')
-    base_dir = os.getcwd()
     
+    base_dir = os.getcwd()
+    if not any((bulk,sc_size,miller)):
+        print('\nIf you would like to exit at any point, type "exit" into any input prompt.')
     #check if bulk file/ID has been given
     if bulk == None:
         print('\nPlease provide a filepath (relative or absolute) or Materials Project ID for the bulk structure. Material IDs should start with "mp-".')
@@ -212,7 +231,7 @@ def create_structure(bulk=None,sc_size=None,miller=None,vacuum=10):
             sc = sc.strip()
             #if len = 5, it's a list of scaling factors
             if len(sc) == 5:
-                sc_size = sc.split(',')
+                sc_size = [int(x) for x in sc.split(',')]
                 break
             elif len(sc) == 23:
                 sc = sc.strip('[]')
@@ -226,6 +245,21 @@ def create_structure(bulk=None,sc_size=None,miller=None,vacuum=10):
                 break
             else:
                 print("Given input doesn't match required parameters. Please try again.")
+    elif sc_size != None:
+        #check length of input to determine 
+        sc = sc_size.strip()
+        #if len = 5, it's a list of scaling factors
+        if len(sc) == 5:
+            sc_size = [int(x) for x in sc.split(',')]
+        elif len(sc) == 23:
+            sc = sc.strip('[]')
+            sc_ls = sc.split('],[')
+            vecs = []
+            for l in sc_ls:
+                ls = l.split(',')
+                v = [(int(x)) for x in ls]
+                vecs.append(v)
+            sc_size = np.fromiter(vecs,dtype=np.dtype((int,3)))
         
     #check for miller index
     if miller == None:
@@ -238,15 +272,14 @@ def create_structure(bulk=None,sc_size=None,miller=None,vacuum=10):
             miller = tuple(int(x) for x in ml_str.split(','))
         else:
             miller = (0,0,1)
-    
+    elif miller != None:
+        if len(miller) == 5:
+            miller = tuple(int(x) for x in miller.split(','))
+        else:
+            miller = (0,0,1)
     #now that all the params are set, build the supercell
-    reordered_cell = get_supercell(bulk,sc_size,miller)
-    filename = get_slab(reordered_cell, vacuum)
+    get_slab(base_dir,bulk,sc_size,miller,vacuum)
     
-    #write spin pairs
-    write_spin_pairs(base_dir, reordered_cell)
-    #print output
-    print(f'POSCAR file {filename} and SpinPairs.txt file created. NOTE: Spin states (up,down) must be assigned by hand!')
 
 
 

@@ -10,7 +10,7 @@ Changelog:
 #import modules
 import os
 import shutil
-from .check_contcar import check_contcar
+from lco_workflow.job_handling.check_contcar import check_contcar
 #define functions
 def copy_vasp_files(source_dir, dest_dir):
     """Copies essential VASP input files from source to destination."""

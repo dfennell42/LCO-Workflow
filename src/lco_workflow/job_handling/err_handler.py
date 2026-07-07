@@ -7,6 +7,7 @@ Changelog:
     3-26-26: Created, comments added. 
     3-27-26: Wrote correct method, updated errors to check for, updated run 
     3-30-26: Removed eddrmm error, updated to actually write new INCAR file. 
+    6-22-26: Updated SLURM check to get output from sacct command (same as StatusCheck)
 """
 #import modules
 import os
@@ -70,6 +71,30 @@ class ErrorHandler:
         self.error_code = 'Exited with exit code'
         self.errors: set[str] = set()
     
+    def __get_slurm_status(self,dirname,latest_file):
+        if latest_file != None:
+            filename = os.path.basename(latest_file)
+            jid = filename.split('-')[1].split('.')[0]
+            try:
+                codes = sp.check_output(['sacct','-n','-j',f'{jid}','-o','State'],stderr=sp.DEVNULL,text=True)
+            except:
+                pass
+        
+            if codes:
+                job_state = codes.split('\n')[0].strip()
+                state = job_state.title()
+        else:
+            pend_chk = sp.check_output(['sacct','-n','-s','pending','-o','State,WorkDir%500'],stderr=sp.DEVNULL,text=True)
+            if pend_chk:
+                jobs = pend_chk.split('\n')
+                for j in jobs:
+                    j = j.strip()
+                    if dirname in j:
+                        state = 'Pending'
+            else:
+                state = 'Not run'
+        return state
+    
     def check(self,dirname = "./"):
         '''Checks for errors in OUTCAR and checks SLURM output file.'''
         #get files
@@ -86,16 +111,9 @@ class ErrorHandler:
         
         self.errors = set()
         #check slurm output
-        with open(latest_file,'r') as sfile:
-            stext = sfile.read()
-            
-            #err check
-            for err,msg in self.slurm_errors.items():
-                if stext.find(msg) != -1:
-                    if err == "cancelled" and "timeout" in self.errors:
-                        continue
-                    else:
-                        self.errors.add(err)
+        self.state = self.__get_slurm_status(dirname, latest_file)
+        if self.state.lower() == 'timeout' or self.state.lower() == 'cancelled':
+            self.errors.add(self.state.lower())
         
         #check vasp output file
         with open(os.path.join(dirname,self.output_file),'rt') as file:
@@ -109,31 +127,14 @@ class ErrorHandler:
                     
         #checks for slurm exiting with exit code 1 (vasp error not caught above)
         if not self.errors:
-            if stext.find(self.error_code) != -1:
+            if self.state.lower() == 'failed':
                 self.errors.add('error_code')
                 
         #check if calc is still running
-        filename = os.path.basename(latest_file)
-        jid = filename.split('-')[1].split('.')[0]
-        try:
-            codes = sp.check_output(['sacct','-n','-j',f'{jid}','-o','State'],stderr=sp.DEVNULL,text=True)
-        except:
-            pass
-        
-        if codes:
-            state = codes.split('\n')[0].strip()
-            if state.lower() == 'running':
-                self.running = True
-                print(f'Calculation in {dirname} still running.')
-            elif state.lower() == 'pending':
-                self.pending = True
-                print(f'Calculation in {dirname} is pending.')
-            else:
-                self.running = False
-                self.pending = False
-        else:
-            self.running = False
-            self.pending = False
+        if self.state.lower() == 'running':
+            print(f'Calculation in {dirname} still running.')
+        elif self.state.lower() == 'pending':
+            print(f'Calculation in {dirname} is pending.')
     
         #return
         return len(self.errors) >0

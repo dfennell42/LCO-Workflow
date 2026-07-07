@@ -10,6 +10,7 @@ Changelog:
 """
 #import modules
 import os
+from rich import print
 from .err_handler import ErrorHandler
 
 #define functions
@@ -40,8 +41,8 @@ def err_fix(base_dir,no_submit=False):
                 handler.submit(dirname)
             
     if not err_files:
-        print('No errors found. All calculations complete.')
+        print('[green]No errors found! All calculations complete.[/]')
         return
             
     if len(err_files) >0 and no_submit == True:
-        print('Errors fixed, but calculations not submitted.')
+        print('[yellow3]Errors fixed, but calculations not submitted.[/]')

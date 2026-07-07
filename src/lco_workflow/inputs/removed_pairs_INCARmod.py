@@ -53,3 +53,4 @@ def process_pairs_mod_dirs(base_directory,element_name,mod,ignore_sym=False):
             if os.path.basename(root).startswith(f'{element_name}_') and root.endswith(f'_{mod}'):
                 process_poscar_files(mod,ignore_sym)
                 modify_incar(os.path.join(root, "INCAR"),root,ignore_sym)
+    

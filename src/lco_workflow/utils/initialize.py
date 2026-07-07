@@ -3,6 +3,7 @@ Script to set up directory of base files for workflow
 Author: Dorothea Fennell
 Changelog: 
     6-23-25: Created, comments added
+    6-18-26: Updated to accommodate script reorganization.
 """
 #import modules
 import os
@@ -37,6 +38,6 @@ def init_settings():
     #set up source dir
     pkgdir = sys.modules['lco_workflow'].__path__[0]
     #print info
-    print('\n All base files (POSCAR, SpinPairs.txt, vasp.sh, etc.) should be added to directory "~/wf-user-files".\n Any edits to these files should be done in that directory.')
+    print('\nAll base files (POSCAR, SpinPairs.txt, vasp.sh, etc.) should be added to directory "~/wf-user-files".\nAny edits to these files should be done in that directory.')
     #make dir
-    make_wf_dir(pkgdir)
+    make_wf_dir(f'{pkgdir}/text_files')

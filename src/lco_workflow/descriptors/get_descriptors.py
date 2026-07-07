@@ -14,11 +14,13 @@ Changelog:
             average band centers & widths for LCE.Also added section to get calculated # of electrons for new potential descriptor. 
             Added func to calculate electron and avg pdos intensity weighted descriptors. 
     3-6-26: Added section to calculate Vo, Vm, Vo-m, & Eoxm. 
+    6-22-26: Added line to ignore warnings using warnings module.
 """
 #import modules
 from pymatgen.io.vasp import Vasprun, Outcar
 from pymatgen.electronic_structure.core import OrbitalType, Spin
 import os
+import warnings
 from ase.io import read
 from ase.formula import Formula
 import numpy as np
@@ -611,9 +613,11 @@ def extract_desc(base_dir,ask=True):
                 #get Vm, Vo, Vm-o, & Eoxm
                 v_ser = get_vs(opt_dir,m_idxs,o_idx,elec_data,bl_ser)
                 #get vasprun for form energy, band gap, band center and t2g/eg dos
-                #use optimization for form_en & band gap, pdos for band center & t2g/eg 
-                opt_vpr = Vasprun(os.path.join(opt_dir,'vasprun.xml'))
-                pdos_vpr = Vasprun(os.path.join(pdos_dir,'vasprun.xml'))
+                #use optimization for form_en & band gap, pdos for band center & t2g/eg
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore')
+                    opt_vpr = Vasprun(os.path.join(opt_dir,'vasprun.xml'))
+                    pdos_vpr = Vasprun(os.path.join(pdos_dir,'vasprun.xml'))
                 #get formation energy
                 form_en = get_form_en(opt_vpr)
                 #get band gap & fermi energy

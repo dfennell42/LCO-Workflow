@@ -43,7 +43,7 @@ def modify_co_pairs(atoms,co_pairs):
 def modify_lco():
     '''Modifies structures based of user input. '''
     pkgdir = sys.modules['lco_workflow'].__path__[0]
-    fullpath = os.path.join(pkgdir, 'POSCAR')
+    fullpath = os.path.join(pkgdir, 'text_files','POSCAR')
     shutil.copy(fullpath, os.getcwd())
     # Read POSCAR 
     atoms = read(os.path.join(os.getcwd(),'POSCAR'))

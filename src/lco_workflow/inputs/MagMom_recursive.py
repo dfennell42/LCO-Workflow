@@ -145,7 +145,7 @@ def process_poscar_files(mod = None, ignore_sym=False):
         return
 
     for poscar_file in poscar_files:
-        print(f"Processing {poscar_file}...")
+        #print(f"Processing {poscar_file}...")
 
         # Read POSCAR and SpinPairs
         elements, num_atoms, atom_to_element = read_poscar(poscar_file)
