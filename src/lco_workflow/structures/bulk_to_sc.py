@@ -142,8 +142,8 @@ def get_slab(base_dir,bulk,sc_size,miller,vacuum):
         new_struc = fix_layers(cell)
         if new_struc != None:
             new_slabgen = SlabGenerator(new_struc, miller, 1, vacuum,center_slab=True,primitive=False)
-            slabs = new_slabgen.get_slabs()
-            for s in slabs:
+            new_slabs = new_slabgen.get_slabs()
+            for s in new_slabs:
                 if s.is_symmetric() == True:
                     slab = s
                     break
@@ -154,6 +154,7 @@ def get_slab(base_dir,bulk,sc_size,miller,vacuum):
             cont = input('Please answer yes (y) or no (n):')
             if cont.lower().startswith('y'):
                 sym = False
+                slab = slabs[0]
                 pass
             else:
                 print('Exiting...')
