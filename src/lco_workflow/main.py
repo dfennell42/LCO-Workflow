@@ -1,58 +1,55 @@
-#import modules
+
 import typer
 from typing_extensions import Annotated
 import os
-#import from files
+from dotenv import load_dotenv
+
 from . import version
-#bash script run-all
+
+from .structures.bulk_to_sc import create_structure
 from .structures.modifyLCO import modify_lco
+from .structures.gen_random_mods import generate_mods_file
+from .structures.modify_heo import modify_without_sym
+from .structures.remove_li_o_pairs import process_vasp_inputs
+from .structures.remove_atoms import process_vasp_inputs_nosym
+from .structures.add_pairs import process_vasp_dirs
+from .structures.add_atoms import process_vasp_dirs_nosym
+
 from .inputs.MagMom_recursive import process_poscar_files
 from .inputs.POTCAR_cat import process_directories
 from .inputs.VASP_input import generate_vasp_inputs_in_dir
 from .inputs.modINCAR import update_incar_files_with_magmom
-#modify heo
-from .structures.gen_random_mods import generate_mods_file
-from .structures.modify_heo import modify_without_sym
-#bash script run-removal
-from .structures.remove_li_o_pairs import process_vasp_inputs
 from .inputs.removed_pairs_INCARmod import process_pairs_mod_dirs
-#remove atoms
-from .structures.remove_atoms import process_vasp_inputs_nosym
-#add pairs
-from .structures.add_pairs import process_vasp_dirs
-#add atoms
-from .structures.add_atoms import process_vasp_dirs_nosym
-#bash script process data
+
 from .energies.get_e_pristine import get_all_e
 from .energies.Calc_Evac import process_e_vac
 from .energies.calc_Eads import process_e_ads
-#bash script run pdos
+
 from .pdos.createPDOS import process_vasp_inputs as pdos_vasp_inputs
 from .pdos.pdos_INCARmod import process_pdos_dirs
-#bash script process pdos
 from .pdos.vasp_pdos import process_pdos_dirs as parse_pdos_dirs
 from .pdos.integrate_pdos import integrate_all_pdos
 from .pdos.tot_int import get_all_data
-#plot pdos
 from .pdos.PDOS_plotter import plot_pdos
-#initialize
-from .utils.initialize import init_settings
-#error & status check
+
 from .job_handling.err_check import err_fix
 from .job_handling.status_check import print_status
 from .job_handling.preflight import print_preflight
 from .job_handling.new_submit import submit_calcs
-#descriptor extraction
+
 from .descriptors.get_descriptors import extract_desc
 from .descriptors.collect_descriptors import collect_descriptors
-#collecting CONTCAR files
-from .utils.collect_contcar import copy_all_files
-#update command
-from .utils.wf_update import check_vrsn
-#chg diff
+
 from .charges.chg_diff import get_chgdiff
-#generate structures
-from .structures.bulk_to_sc import create_structure
+
+from .utils.settings import read_settings
+from .utils.prepare import prepare_dir
+from .utils.collect_contcar import copy_all_files
+from .utils.wf_update import check_vrsn
+from .utils.initialize import init_settings
+
+#load variables
+load_dotenv()
 #create app
 app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]},rich_markup_mode='rich')
 
@@ -248,6 +245,13 @@ def extall():
 def init():
     '''[dodger_blue1]Initialize[/] workflow settings.'''
     init_settings()
+
+@app.command(rich_help_panel='Utils')
+def prep():
+    '''
+    [dodger_blue1]Prepare[/] directory for set of calculations. [bold red1] IN PROGRESS [/]
+    '''
+    prepare_dir()
 
 @app.command(rich_help_panel='Utils')
 def collect(

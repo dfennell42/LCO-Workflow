@@ -1,0 +1,13 @@
+#files
+poscar-file = "POSCAR"
+mods-file = "Mods.txt"
+spin-file = "SpinPairs.txt"
+submit-file = "vasp.sh"
+#ignore symmetry?
+ignore-symmetry = false
+
+#Add calculation specific incar parameters here. These values will override custom_incar_params.txt/PDOS_INCAR.txt.
+#If these tables are empty, params will come from appropriate file in ~/wf-user-files
+[incar-params]
+
+[pdos-params]

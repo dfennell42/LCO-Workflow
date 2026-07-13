@@ -10,6 +10,7 @@ Changelog:
     6-15-26: Wrote user input section.
     7-1-26: Added line to convert list of spin pair tuples to strings
     7-6-26: Rewrote surface cleavage and symmetry checks.
+    7-9-26: Fixed spin pairs not writing line breaks.
 """
 #import
 import os
@@ -101,9 +102,8 @@ def fix_layers(struc):
     new_struc = Structure.from_ase_atoms(new_cell)
     return new_struc
 
-def write_poscar(base_dir,slab,og_struc,miller):
+def write_poscar(base_dir,slab,formula,miller):
     '''Gets filename and writes POSCAR file.'''
-    formula = og_struc.composition.reduced_formula
     #convert miller index to str
     ms= ''.join([str(x) for x in miller])
     filename = f'{formula}-{ms}-slab.vasp'
@@ -127,6 +127,8 @@ def get_slab(base_dir,bulk,sc_size,miller,vacuum):
     ref_struc = SpacegroupAnalyzer(struc).get_refined_structure()
     #make supercell
     cell = ref_struc.make_supercell(sc_size,in_place=False)
+    #get reduced formula for later
+    formula = cell.composition.reduced_formula
     #surface cleavage
     slabgen = SlabGenerator(cell, miller, 1, vacuum,center_slab=True,primitive=False)
     slabs = slabgen.get_slabs()
@@ -177,13 +179,13 @@ def get_slab(base_dir,bulk,sc_size,miller,vacuum):
         #create reordered cell
         reordered_cell = Structure.from_sites(site_list)
         #write spin pairs if sym
-        write_spin_pairs(base_dir, reordered_cell)
+        write_spin_pairs(base_dir, reordered_cell,formula)
     elif sym == False:
         print('Due to lack of symmetry, SpinPairs.txt file not created.')
     #write poscar
-    write_poscar(base_dir, slab, cell, miller)
+    write_poscar(base_dir, reordered_cell, formula, miller)
 
-def write_spin_pairs(base_dir,reordered_cell):
+def write_spin_pairs(base_dir,reordered_cell,formula):
     '''Writes spin pairs file given organized structure. NOTE: Only writes the indices of the pairs, does not assign spin states.'''
     sites = reordered_cell.sites
     #get indices of non-alkali & non-alkaline metals
@@ -202,10 +204,11 @@ def write_spin_pairs(base_dir,reordered_cell):
         return
     #convert tuple to str
     sp_str = [str(x).strip('()') for x in spin_pairs]
+    sp_lines = [f'{x}\n' for x in sp_str]
     #write file
-    with open(f'{base_dir}/SpinPairs.txt','w') as f:
-        f.writelines(sp_str)
-    print('SpinPairs.txt file created. NOTE: Spin states (up,down) must be assigned by hand!')
+    with open(f'{base_dir}/SpinPairs-{formula}.txt','w') as f:
+        f.writelines(sp_lines)
+    print(f'SpinPairs-{formula}.txt file created. NOTE: Spin states (up,down) must be assigned by hand!')
 
 def create_structure(bulk=None,sc_size=None,miller=None,vacuum=10):
     '''Generates surface structure based on bulk structure and user input. Bulk structure can be given as a file or as a Materials Project ID. Note: If using Materials Project, an API key MUST be provided. User input can be provided either through input prompts or using command line options.'''

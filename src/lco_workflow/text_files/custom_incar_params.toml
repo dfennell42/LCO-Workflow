@@ -1,0 +1,9 @@
+#Custom INCAR parameters for structural optimization
+[incar-params]
+ENCUT = 520
+ISIF = 3
+ISMEAR = 0
+SIGMA = 0.05
+EDIFF = 1e-5
+EDIFFG = -0.02
+LWAVE = true

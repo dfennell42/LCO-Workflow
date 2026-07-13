@@ -4,6 +4,7 @@ Author: Dorothea Fennell
 Changelog: 
     6-23-25: Created, comments added
     6-18-26: Updated to accommodate script reorganization.
+    7-9-26: Updated to include BulkE & MagMom dicts, incar parameter files, and base settings, as well as create an example files dir.
 """
 #import modules
 import os
@@ -14,7 +15,7 @@ def copy_files(source_dir, dest_dir):
     """Copies files from source to destination."""
     os.makedirs(dest_dir, exist_ok=True)  # Ensure the target directory exists
     # List of files to copy
-    FILES_TO_COPY = ["POSCAR", "SpinPairs.txt", "vasp.sh", "PDOS_INCAR.txt"]
+    FILES_TO_COPY = ["BulkE_dict.txt", "MagMom_dict.txt", "PDOS_INCAR.txt","custom_incar_params.txt", "base_settings.toml"]
     for file in FILES_TO_COPY:
         src_file = os.path.join(source_dir, file)
         dest_file = os.path.join(dest_dir, file)
@@ -32,6 +33,9 @@ def make_wf_dir(source_dir):
     
     #copy files
     copy_files(source_dir, wf_dir)
+    ex_files = os.path.join(source_dir,'example_files')
+    wf_ex = os.path.join(wf_dir,'example_files')
+    shutil.copytree(ex_files,wf_ex)
     
 def init_settings():
     '''Initialize settings and files'''
