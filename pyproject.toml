@@ -1,7 +1,7 @@
 [project]
-name = "lco-workflow"
-version = "0.15.1"
-description = "A CLI tool for the LCO Modifications Workflow"
+name = "matworkforge"
+version = "0.15.2"
+description = "A CLI tool for generating & modifying structures for VASP calculations."
 authors = [
     {name = "Dorothea Fennell",email = "dfennell1@bnl.gov"}
 ]
@@ -20,10 +20,10 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "lco_workflow", from = "src"}]
+packages = [{include = "matworkforge", from = "src"}]
 
 [tool.poetry.scripts]
-wf = "lco_workflow.main:app"
+wf = "matworkforge.main:app"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

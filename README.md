@@ -1,12 +1,10 @@
-# LCO Modification Workflow CLI
+# Materials WorkForge CLI
 #### Author: Dorothea Fennell (dfennell1@bnl.gov, dfennell37@gmail.com)
 **Version**: 0.15.0
 
 ---
 ### Important Note:
-This version, as the original, was designed to work on a specific computing cluster. As such, there are specific paths/commands that will not work if you upload this to a different cluster. There is another, generalized version of this workflow that does not have that issue. It can be found here: [Delafossite-Workflow](https://github.com/dfennell42/Delafossite-Workflow/)
-
-However, if you prefer to use this version, follow the instructions for the editable installation below. 
+This package is in the process of being generalized & made ready for v1.0. As such, the documentation is currently out of date. Commands may be changed, removed, or added. 
 
 ---
 

@@ -1,4 +1,7 @@
 # Workflow Guide:
+
+#### Be advised this guide is out of date, and a new version is in revision for v1.0.
+
 To install the workflow, follow the instructions in [README.md](README.md). The following guide will assist in running the python-based workflow designed to assist in setting up, submitting, and processing VASP calculations for LCO and LCO-derivatives. The workflow uses Atomic Simulation Environment (ASE) and Pymatgen to create/modify structures and generate VASP input files. The workflow was built into a command-line interface (CLI) with Typer and then into a package with Poetry. 
 
 As of right now, the workflow only supports SLURM for job submission. Any commands that submit calculations ***will not work*** with other workload managers. 
